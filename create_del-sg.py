@@ -57,8 +57,8 @@ def get_sg_id(sg):
         security_group_id = item.id
     return security_group_id
 
-#sg_string = "Temp-Packer-SSH-Ephemeral_ssc_amzn-singledisk_packer-beanstalk"
-sg_string = "Temp-Packer-SSH-Ephemeral_ssc_amzn-singledisk_packer-base"
+#sg_string = "Temp-Packer-SSH-Ephemeral_local_amzn-singledisk_packer-beanstalk"
+sg_string = "Temp-Packer-SSH-Ephemeral_local_amzn-singledisk_packer-base"
 
 print get_sg_id(sg_string)
 
