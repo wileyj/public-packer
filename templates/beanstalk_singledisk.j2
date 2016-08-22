@@ -1,0 +1,61 @@
+{
+    "builders": [{
+        "type": "amazon-ebs",
+        "communicator": "ssh",
+        "source_ami": "{{source_ami}}",
+        "vpc_id": "{{vpc_id}}",
+        "subnet_id": "{{subnet_id}}",
+        "instance_type": "{{instance_type}}",
+        "ssh_username": "{{ssh_user}}",
+        "ami_name": "{{prefix}}",
+        "region": "{{region}}",
+        "iam_instance_profile": "{{instance_profile}}",
+        "ami_regions": ["{{region}}"],
+	{{networking}}
+        "ami_description": "{{prefix}}",
+        "user_data_file": "{{user_data_file}}",
+        "tags": {
+            "OS": "Amazon Linux",
+            "Name": "{{prefix}}",
+            "SourceAmi": "{{source_ami}}",
+            "BuildTime": "{{timestamp}}",
+            "BuildType": "Single Disk",
+            "BuildMethod": "Packer",
+            "Persist": "True"
+        },
+        "ami_block_device_mappings": [{
+            "device_name": "/dev/xvda",
+            "volume_size": 15,
+            "volume_type": "gp2",
+            "delete_on_termination": true
+        }]
+    }],
+    "provisioners": [{
+        "type": "shell",
+        "script": "{{scripts}}",
+        "execute_command": "sudo -E sh '{{sudo}}'"
+    }, {
+        "type": "shell",
+        "execute_command": "sudo -E '{{sudo}}'",
+        "inline": [
+            "yum clean all",
+            "yum install -y {{packages}}",
+            "pip install --upgrade {{modules}}"
+        ]
+    }, {
+        "type": "shell",
+        "inline": [
+            "echo '' | sudo tee --append /etc/ssh/sshd_config > /dev/null",
+            "echo 'ForceCommand /usr/sbin/login_duo'| sudo tee --append /etc/ssh/sshd_config > /dev/null"
+        ]
+    }, {
+        "type": "shell",
+        "script": "{{create_user_script}}",
+        "execute_command": "sudo -E python '{{sudo}}' --group ops"
+    }, {
+        "type": "shell",
+        "script": "{{create_user_script}}",
+        "execute_command": "sudo -E python '{{sudo}}' --group ui"
+{{ extra_script }}
+    }]
+}

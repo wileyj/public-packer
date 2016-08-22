@@ -1,0 +1,90 @@
+#!/usr/bin/python
+import argparse
+import os
+import pwd
+import grp
+from boto3.session import Session
+
+region = "us-east-1"
+session = Session()
+iam = session.resource('iam')
+s3 = session.resource('s3')
+s3_bucket = "s3-pubkey"
+key_dir = "/var/tmp"
+
+def find_users(group):
+    """ docstring """
+    os.system("/usr/sbin/groupadd "+group)
+    command_data = "Cmnd_Alias NOSUDO = !/usr/bin/sudo,!/bin/su,!/bin/vi /etc/sudoers,!/usr/sbin/visudo,!/bin/bash,!/bin/csh,!/bin/ksh,!/bin/sh,!/bin/tcsh,!/bin/zsh"
+    command_file = "/etc/sudoers.d/01_nosudo"
+    group_file = "/etc/sudoers.d/02_"+group
+    if not os.path.isfile("/etc/sudoers.d/01_nosudo"):
+        print "Filedata(%s): %s" % (command_file, command_data)
+        group_commands_out = open(command_file, "w")
+        group_commands_out.write(command_data+"\n")
+    if not os.path.isfile(group_file):
+        group_out = open(group_file, "w")
+        if group == "ops":
+            print "Filedata(%s): %s ALL=(ALL) NOPASSWD: ALL" % (command_file, group)
+            group_out.write("%"+group+" ALL=(ALL) NOPASSWD: ALL"+"\n")
+        else:
+            print "Filedata(%s): %s ALL=(ALL) NOPASSWD:NOSUDO, ALL" % (command_file, group)
+            group_out.write("%"+group+" ALL=(ALL) NOPASSWD:NOSUDO, ALL"+"\n")
+    os.chown(command_file, 0, 0)
+    os.chown(group_file, 0, 0)
+    os.chmod(command_file, 0440)
+    os.chmod(group_file, 0440)
+
+    iam_group = iam.Group(group)
+    print "Adding Users from Group %s" % (iam_group)
+    for item in iam_group.users.all():
+        print "Getting User key for: %s" % (item.name)
+        get_user_key(item.name, s3_bucket)
+        print "Creating user for: %s" % (item.name)
+        create_user(item.name, group)
+    return 0
+
+def get_user_key(user, bucket):
+    """ docstring """
+    s3.Bucket(bucket).download_file(user, key_dir+"/"+user)
+
+def create_user(user, group):
+    """ docstring """
+    userstr = str(user)
+    groupstr = str(group)
+    print "creating user %s" % (userstr)
+    print "running: /usr/sbin/adduser %s -g %s -m -s /bin/bash" % (userstr, groupstr)
+    os.system("/usr/sbin/adduser "+userstr+" -g "+groupstr+" -K MAIL_DIR=/dev/null -m -s /bin/bash")
+    os.chmod("/home/"+userstr, 0755)
+    print "running: mkdir /home/%s/.ssh" % (userstr)
+    os.mkdir("/home/"+userstr+"/.ssh")
+    file_in = open(key_dir+"/"+userstr, 'r')
+    file_out = open("/home/"+userstr+"/.ssh/authorized_keys", 'w')
+    file_out.write(file_in.read())
+    print "running: /bin/chmod 740 /home/%s/.ssh" % (userstr)
+    os.chmod("/home/"+userstr+"/.ssh/", 0740)
+    print "running: /bin/chmod 600 /home/%s/.ssh/authorized_keys" % (userstr)
+    os.chmod("/home/"+userstr+"/.ssh/authorized_keys", 0600)
+    uid = pwd.getpwnam(userstr).pw_uid
+    gid = grp.getgrnam(groupstr).gr_gid
+    print "running: chown %s:%s /home/%s" % (userstr, groupstr, userstr)
+    _chown("/home/"+userstr, uid, gid)
+    os.chown("/home/"+userstr+"/.ssh/authorized_keys", uid, gid)
+    os.remove(key_dir+"/"+userstr)
+def _chown(path, uid, gid):
+    """ docstring """
+    os.chown(path, uid, gid)
+    for item in os.listdir(path):
+        itempath = os.path.join(path, item)
+        if os.path.isfile(itempath):
+            os.chown(itempath, uid, gid)
+        elif os.path.isdir(itempath):
+            os.chown(itempath, uid, gid)
+
+if __name__ == "__main__":
+    """ docstring """
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--group',metavar='', default="", help='group name')
+    args = parser.parse_args()
+    if args.group:
+        find_users(args.group)
