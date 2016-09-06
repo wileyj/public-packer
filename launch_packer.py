@@ -51,7 +51,6 @@ pv_beanstalk_ecs = 'aws-elasticbeanstalk-amzn-*x86_64-ecs-pv-*'
 default_packages = "python27-boto python27-botocore python27-boto3 python27-pip duo duo-libs ruby rubygems ruby-libs ruby-irb rubygems puppet facter hiera aws-apitools-common aws-cli sysstat ansible telnet"
 default_modules = "boto3 botocore awscli futures python-dateutil docutils six jmespath pyasn1 colorama s3transfer rsa"
 epoch = time.time()
-# account_id = "349339268584"
 extra_script = ""
 
 packer_template = "/var/tmp/packer-"+str(epoch)+".json"
