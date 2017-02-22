@@ -1,8 +1,0 @@
-#export PACKER_LOG=debug
-/usr/share/golang/bin/packer build \
--var 'ami_id=ami-4454234' \
--var 'subnet_id=subnet-1234567' \
--var 'ec2_type=t2.micro' \
--var 'ssh_user=ec2-user' \
--var 'vpc_id=vpc-142345' \
-base_core.json

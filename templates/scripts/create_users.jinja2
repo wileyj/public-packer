@@ -87,4 +87,8 @@ if __name__ == "__main__":
     parser.add_argument('--group',metavar='', default="", help='group name')
     args = parser.parse_args()
     if args.group:
-        find_users(args.group)
+        try:
+            find_users(args.group)
+        except:
+            print "Group %s is not found in IAM" % (args.group)
+            exit(0)

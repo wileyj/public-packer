@@ -1,0 +1,69 @@
+#cloud-config
+password: atomic
+chpasswd: { expire: False }
+ssh_pwauth: True
+write_files:
+  - encoding: b64
+    content: W1VuaXRdCkRlc2NyaXB0aW9uPUNvY2twaXQgV2ViIEludGVyZmFjZQpSZXF1aXJlcz1kb2NrZXIuc2VydmljZQpBZnRlcj1kb2NrZXIuc2VydmljZQoKW1NlcnZpY2VdClJlc3RhcnQ9b24tZmFpbHVyZQpSZXN0YXJ0U2VjPTEwCkV4ZWNTdGFydD0vdXNyL2Jpbi9kb2NrZXIgcnVuIC0tcm0gLS1wcml2aWxlZ2VkIC0tcGlkIGhvc3QgLXYgLzovaG9zdCAtLW5hbWUgJXAgZmVkb3JhL2NvY2twaXR3cyAvY29udGFpbmVyL2F0b21pYy1ydW4gLS1sb2NhbC1zc2gKRXhlY1N0b3A9LS91c3IvYmluL2RvY2tlciBzdG9wIC10IDIgJXAKCltJbnN0YWxsXQpXYW50ZWRCeT1tdWx0aS11c2VyLnRhcmdldAo=
+    owner: root:root
+    path: /etc/systemd/system/cockpitws.service
+    permissions: '0644'
+ - path: /root/.dockercfg
+   permissions: 0640
+   owner: root
+   content: |
+     {
+       "{{ docker_url }}": {
+         "auth": "{{ docker_auth }}",
+         "email": "{{ docker_email }}"
+       },
+       "{{ quay_url }}": {
+         "auth": "{{ quay_auth }}",
+         "email": "{{ quay_email }}"
+       }
+     }
+
+runcmd:
+- [ systemctl, daemon-reload ]
+- [ systemctl, enable, cockpitws.service ]
+- [ systemctl, start, --no-block, cockpitws.service ]
+
+disk_setup:
+  /dev/xvdf:
+    table_type: 'mbr'
+    layout: True
+    overwrite: True
+
+
+fs_setup:
+    filesystem: xfs
+    device: ephemeral0
+    partition: auto
+
+mounts:
+    - [ /dev/xvdf, /srv, auto, "defaults,noexec" ]
+
+write_files:
+  - path: /root/.dockercfg
+    permissions: 0640
+    owner: root
+    content: |
+      {
+        "{{ docker_url }}": {
+          "auth": "{{ docker_auth }}",
+          "email": "{{ docker_email }}"
+        },
+        "{{ quay_url }}": {
+          "auth": "{{ quay_auth }}",
+          "email": "{{ quay_email }}"
+        }
+      }
+
+users:
+    - name: user
+      system: true
+      groups:
+        - docker
+        - sudo
+      no-create-home: true
+      homedir: /home/user

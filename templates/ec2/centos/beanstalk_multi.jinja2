@@ -11,20 +11,26 @@
         "region": "{{region}}",
         "iam_instance_profile": "{{instance_profile}}",
         "ami_regions": ["{{region}}"],
-	{{networking}}
+  {{networking}}
         "ami_description": "{{prefix}}",
         "user_data_file": "{{user_data_file}}",
         "tags": {
-            "OS": "Amazon Linux",
+            "OS": "{{ os }}",
             "Name": "{{prefix}}",
             "SourceAmi": "{{source_ami}}",
             "BuildTime": "{{timestamp}}",
             "BuildType": "Single Disk",
             "BuildMethod": "Packer",
+            "Environment": "{{ environment }}",
             "Persist": "True"
         },
         "ami_block_device_mappings": [{
             "device_name": "/dev/xvda",
+            "volume_size": 15,
+            "volume_type": "gp2",
+            "delete_on_termination": true
+        },{
+            "device_name": "/dev/sdf",
             "volume_size": 15,
             "volume_type": "gp2",
             "delete_on_termination": true
