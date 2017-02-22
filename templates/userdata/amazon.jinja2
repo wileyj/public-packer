@@ -1,0 +1,39 @@
+#!/bin/sh
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
+sudo yum install -y \
+    openssh-clients \
+    openssh-server \
+    openssh \
+    yum-plugin-priorities \
+    deltarpm \
+    strace \
+    nmap \
+    coreutils \
+    lsof \
+    at \
+    nc \
+    bc \
+    traceroute \
+    tcpdump \
+    binutils \
+    bind-utils \
+    rsync
+sudo yum clean all
+
+cat << EOF > /etc/yum.repos.d/mbot.repo
+[mbot_x86_64]
+name=mbot_x86_64
+baseurl=http://{{repo_address}}/yum/RPMS/x86_64
+#exclude={{exclude_list}}
+gpgcheck=0
+priority=1
+enabled=1
+
+[mbot_noarch]
+name=mbot_noarch
+baseurl=http://{{repo_address}}/yum/RPMS/noarch
+#exclude={{exclude_list}}
+gpgcheck=0
+priority=1
+enabled=1
+EOF

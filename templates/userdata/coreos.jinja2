@@ -1,0 +1,95 @@
+#cloud-config
+write_files:
+  - path: /root/.dockercfg
+    permissions: 0640
+    owner: root
+    content: |
+      {
+        "{{ docker_url }}": {
+          "auth": "{{ docker_auth }}",
+          "email": "{{ docker_email }}"
+        },
+        "{{ quay_url }}": {
+          "auth": "{{ quay_auth }}",
+          "email": "{{ quay_email }}"
+        }
+      }
+
+users:
+    - name: user
+      system: true
+      groups:
+        - sudo
+        - docker
+      no-create-home: true
+
+coreos:
+  update:
+    reboot-strategy: etcd-lock
+  etcd2:
+    initial-cluster: default={{ etcd_cluster }}
+    initial-cluster-state: existing
+    proxy: on
+    advertise-client-urls: http://$private_ipv4:2379
+    initial-advertise-peer-urls: http://$private_ipv4:2380
+    listen-client-urls: http://0.0.0.0:2379,http://0.0.0.0:4001
+    listen-peer-urls: http://$private_ipv4:2380,http://$private_ipv4:7001
+
+  units:
+    - name: format-log.service
+      command: start
+      content: |
+        [Unit]
+        Description=Formats the log drive
+        After=dev-{{ log_disk }}
+        Requires=dev-{{ log_disk }}.device
+        [Service]
+        Type=oneshot
+        RemainAfterExit=yes
+        ExecStart=/usr/sbin/wipefs -f /dev/{{ log_disk }}
+        ExecStart=/usr/sbin/mkfs.xfs -f /dev/{{ log_disk }}
+    - name: srv-log.mount
+      command: start
+      content: |
+        [Unit]
+        Description=Mount ephemeral to {{ log_mount }}
+        Requires=format-log.service
+        After=format-log.service
+        Before=docker.service
+        [Mount]
+        What=/dev/{{ log_disk }}
+        Where={{ log_mount }}
+        Type=xfs
+    - name: rpc-statd.service
+      command: start
+      enable: true
+    - name: etcd2.service
+      command: start
+    - name: flanneld.service
+      command: start
+    - name: update-fleet-metadata.service
+      command: start
+      content: |-
+        [Unit]
+        Description=Update Fleet metadata tag
+        Before=fleet.service
+        Requires=fleet.service
+        [Service]
+        Type=oneshot
+        RemainAfterExit=no
+        EnvironmentFile=/etc/environment
+        ExecStart=/bin/bash /tmp/generate_flannel_metadata.sh
+    - name: docker-tcp.socket
+      command: start
+      content: |-
+        [Unit]
+        Description=Docker Socket for the API
+        [Socket]
+        ListenStream=2375
+        BindIPv6Only=both
+        Service=docker.service
+        [Install]
+        WantedBy=sockets.target
+
+runcmd:
+  - restart docker-tcp.socket

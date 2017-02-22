@@ -1,0 +1,14 @@
+NAME="crond"
+if [ ! -d "/etc/service/${NAME}" ];then
+    mkdir -p /etc/service/${NAME}
+fi
+
+cat << EOF > /etc/service/${NAME}/run
+#! /bin/sh
+exec 2>&1
+source /etc/envvars
+exec /usr/sbin/${NAME} -n -s
+EOF
+
+chown root:root /etc/service/${NAME}/run
+chmod u+x /etc/service/${NAME}/run
