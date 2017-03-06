@@ -39,18 +39,7 @@
             "encrypted": true
         }]
     }],
-    "provisioners": [
-    {% if os == "ubuntu" or os == "amazon" or os == "centos" %}
-    {
-        "type": "shell",
-        "inline": [
-            {% if os == "ubuntu" %}"sudo apt-get update -y"{% else %}"sudo yum update -y{{package}}"{% endif %},
-            {% for package in default_packages %}{% if os == "ubuntu" %}"sudo apt-get install -y {{package}}"{% else %}"sudo yum install -y {{package}}"{% endif %}{% if not loop.last %},
-            {% endif %}{% endfor %}
-        ]
-    },
-    {% endif %}
-    {
+    "provisioners": [{
         "type": "shell",
         "execute_command": "sudo -S sh '{{ sudo }}'",
         "inline_shebang": "/bin/sh -e -x",

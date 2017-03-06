@@ -39,14 +39,12 @@
             "encrypted": true
         }]
     }],
-    "provisioners": [
-    {% if os == "ubuntu" or os == "amazon" or os == "centos" or os == "atomic" %}
-    {
+    "provisioners": [{
         "type": "shell",
         "execute_command": "sudo -S sh '{{ sudo }}'",
         "inline_shebang": "/bin/sh -e -x",
         "inline": [
-            {% if os == "ubuntu" %}"sudo apt-get update -y "{% else %}"sudo yum update -y "{% endif %},
+            {% if os == "ubuntu" %}"sudo apt-get update -y "{% else %}"sudo yum clean all && sudo yum update -y "{% endif %},
             {% for package in default_packages %}{% if loop.first %}{% if os == "ubuntu" %}"sudo apt-get install -y{% else %}"sudo yum install -y {% endif %}{% endif %} {{package}}{% if loop.last %}"{% endif %}{% endfor %}
         ]
     },{
@@ -58,11 +56,28 @@
             {% endif %}{% endfor %}
         ]
     },{
+        "type": "file",
+        "source": "{{ salt_grains_file }}",
+        "destination": "/tmp/grains"
+    },{
+        "type": "shell",
+        "execute_command": "sudo -S sh '{{ sudo }}'",
+        "inline": [
+            "mv /tmp/grains /etc/salt/grains"
+        ]
+    },{
+        "type": "salt-masterless",
+        "local_state_tree": "{{ salt_state_tree }}",
+        "local_pillar_roots": "{{ salt_pillar_root }}",
+        "no_exit_on_failure": false,
+        "log_level": "debug",
+        "skip_bootstrap": true
+    },{
         "type": "shell",
         "script": "{{create_user_script}}",
         "execute_command": "sudo -E python '{{sudo}}' --group ops"
-    },{% endif %}{
-        "type": "shell",
+    },{
+    "type": "shell",
         "execute_command": "sudo -S sh '{{ sudo }}'",
         "inline_shebang": "/bin/sh -e -x",
         "inline": [

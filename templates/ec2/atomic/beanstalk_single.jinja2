@@ -7,7 +7,6 @@
         "subnet_id": "{{subnet_id}}",
         "instance_type": "{{instance_type}}",
         "ssh_username": "{{ssh_user}}",
-        "ssh_pty": true,
         "ami_name": "{{prefix}}",
         "region": "{{region}}",
         "iam_instance_profile": "{{instance_profile}}",
@@ -29,27 +28,35 @@
             "device_name": "/dev/xvda",
             "volume_size": 15,
             "volume_type": "gp2",
-            "delete_on_termination": true,
-            "encrypted": true
-        },{
-            "device_name": "/dev/sdf",
-            "volume_size": 100,
-            "volume_type": "gp2",
-            "delete_on_termination": true,
-            "encrypted": true
+            "delete_on_termination": true
         }]
     }],
     "provisioners": [{
         "type": "shell",
-        "execute_command": "sudo -S sh '{{ sudo }}'",
-        "inline_shebang": "/bin/sh -e -x",
+        "script": "{{scripts}}",
+        "execute_command": "sudo -E sh '{{sudo}}'"
+    }, {
+        "type": "shell",
+        "execute_command": "sudo -E '{{sudo}}'",
         "inline": [
-            "echo '** Shreding sensitive data ...'",
-            "shred -u /etc/ssh/*_key /etc/ssh/*_key.pub",
-            "shred -u /root/.*history /home/{{ ssh_user }}/.*history",
-            "shred -u /root/.ssh/authorized_keys /home/{{ ssh_user }}/.ssh/authorized_keys",
-            "sync; sleep 1; sync"
+            "yum clean all",
+            "yum install -y {{packages}}",
+            "pip install --upgrade {{modules}}"
         ]
+    }, {
+        "type": "shell",
+        "inline": [
+            "echo '' | sudo tee --append /etc/ssh/sshd_config > /dev/null",
+            "echo 'ForceCommand /usr/sbin/login_duo'| sudo tee --append /etc/ssh/sshd_config > /dev/null"
+        ]
+    }, {
+        "type": "shell",
+        "script": "{{create_user_script}}",
+        "execute_command": "sudo -E python '{{sudo}}' --group ops"
+    }, {
+        "type": "shell",
+        "script": "{{create_user_script}}",
+        "execute_command": "sudo -E python '{{sudo}}' --group ui"
 {{ extra_script }}
     }]
 }

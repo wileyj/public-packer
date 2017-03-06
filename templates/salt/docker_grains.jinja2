@@ -1,4 +1,6 @@
 instance:
+    application: {{ application }}
+    role: {{ role }}
     environment: {{ environment }}
     release: {{ release }}
     tag: {{ tag }}
@@ -7,3 +9,7 @@ instance:
     instance_profile: {{ instance_profile }}
     vpc_id: {{ vpc_id }}
     subnet_id: {{ subnet_id }}
+    cleanup: {{ cleanup }}
+{% if type != 'Docker' %}
+virtual_subtype: {{ type }}
+{% endif %}
