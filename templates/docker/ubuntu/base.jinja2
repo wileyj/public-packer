@@ -35,13 +35,16 @@
         "script": "{{ extra_script }}",
         "execute_command": "sudo -E sh '{% raw %}{{ .Path }}{% endraw %}' {{ extra_script_args }}"
 {% endif %}
+{% if tagname == 'latest' or tagname == 'master' or role == 'base' %}
     },{
         "type": "shell",
         "inline": [
-            "apt-get remove -y salt*",
-            "apt-get remove -y libpython3-stdlib libpython3.4-minimal libpython3.4-stdlib python-chardet python-concurrent.futures python-crypto python-dateutil python-html5lib python-html5lib-whl python-jinja2 python-mako python-markupsafe python-msgpack python-mysqldb python-pip python-pip-whl python-pycurl python-requests python-setuptools python-six python-urllib3 python-yaml python-zmq",
-            "rm -rf /srv/*"
+            "apt-get remove -y salt* salt-common salt-master",
+            "apt-get remove -y libpython3-stdlib libpython3.4-minimal libpython3.4-stdlib python-chardet python-concurrent.futures python-crypto python-dateutil python-html5lib python-html5lib-whl python-jinja2 python-mako python-markupsafe python-msgpack python-mysqldb python-pycurl python-requests python-six python-urllib3 python-yaml python-zmq",
+            "rm -rf /srv/salt /srv/pillar /srv/reactor /var/cache/salt",
+            "apt-get autoremove -y"
         ]
+{% endif %}
     }],
     "post-processors": [[
         {
