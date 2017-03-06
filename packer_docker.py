@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# python packer_docker.py  --tag <tag> --image <image> --role <role> --application <application> --repo <docker repo> --env dev --push
 # python packer_docker.py  --tag <application> --image ubuntu:trusty --role base --application ops --repo <org>/ops --env dev --push
 #   creates container - <org>/ops:base.<application>
 # python packer_docker.py  --tag latest --image ubuntu:trusty --application <application> --role web --repo <org>/base_<application> --env dev
@@ -8,19 +9,17 @@
 # python packer_docker.py  --tag latest --image <org>/ops:base.latest --application platform --role varnish --env dev --os centos --type base --repo <org>/ops
 # python packer_docker.py  --tag latest --image <org>/ops:base.latest --application shared --role varnish --env dev --os centos --type base --repo <org>/ops
 
-
 import argparse
 import logging
 import datetime
 import os
 import time
 import jinja2
-import shutil
 
 epoch = time.time()
 packer_template = "/var/tmp/packer-"+str(epoch)+".json"
 salt_grains_template = "/var/tmp/salt_grains-"+str(epoch)
-grains_file = "instance_grains.jinja2"
+grains_file = "docker_grains.jinja2"
 shell_script = "/var/tmp/shell-"+str(epoch)+".sh"
 services_script = "/var/tmp/services-"+str(epoch)+".sh"
 packer_binary = "~/go-workspace/bin/packer"
@@ -30,7 +29,7 @@ packer_template_path = "templates/docker/"
 salt_template_path = "templates/salt/"
 scripts_template_path = "templates/scripts/"
 os_template_path = "templates/userdata/"
-services_template_path = "templates/runit_services/"
+# services_template_path = "templates/runit_services/"
 cwd = os.getcwd()
 env = jinja2.Environment(loader=jinja2.FileSystemLoader([cwd+"/templates"]))
 timestamp = datetime.datetime.utcnow().isoformat()
@@ -41,8 +40,8 @@ salt_state_tree = cwd+"/salt/srv/salt"
 salt_pillar_root = cwd+"/salt/srv/pillar"
 bootstrap_args = "-d -M -N -X -q -Z -c /tmp"
 errors = []
-repo_address = "s3.amazonaws.com/org-package-repo" # if not in main VPC, use the local address of xxxx
-repo_dns = "s3.amazonaws.com/org-package-repo"
+repo_address = "s3.amazonaws.com/local-package-repo" # if not in main VPC, use the local address of xxxx
+repo_dns = "s3.amazonaws.com/local-package-repo"
 user = os.getlogin()
 
 remove_dirs = [
@@ -128,36 +127,6 @@ def write_shell_template(template_values, template_source, template_dest, templa
     os.close(fd)
     return 0
 
-def write_services_template(template_values, template_source, template_dest, template_path):
-    """ docstring """
-    check_and_delete_file(template_dest)
-    result = ""
-    print "[ EXEC  ] - Writing Services Template %s" % (template_source)
-    print "looking for %s%s to write %s" % (template_path, template_source, template_dest)
-    jinja2_env = jinja2.Environment(loader=jinja2.FileSystemLoader([template_path]))
-    template = jinja2_env.get_template(template_source)
-    result = template.render(template_values)
-    with open(template_dest, 'w') as output:
-    # os.open(template_dest, os.O_CREAT)
-    # fd = os.open(template_dest, os.O_RDWR)
-    # os.write(fd, result)
-        output.write(result)
-        print "\t Adding default_services to %s" % (template_dest)
-        for service in default_services:
-            filename = services_template_path+service+".service"
-            print "\t  Read filename: %s" % (filename)
-            with open(filename, 'r') as f:
-                for line in f:
-                    # os.write(fd, f)
-                    output.write(line)
-                f.closed
-    output.closed
-    file_stat = os.stat(template_dest)
-    file_size = file_stat.st_size
-    print "\tCreated Services Script: %s ( %s )" % (template_dest, file_size)
-    # os.close(fd)
-    return 0
-
 def launch_packer(launch_binary, launch_template):
     """ docstring """
     logging.warning("\tLaunching: %s" % (launch_binary))
@@ -166,14 +135,6 @@ def launch_packer(launch_binary, launch_template):
         os.system(launch_binary + ' build ' + launch_template)
     except:
         logging.exception("Packer exception occurred")
-    if args.role == "sumologic":
-        logging.error("Removing sumologic config dir /var/tmp/sumologic")
-        try:
-            shutil.rmtree("/var/tmp/sumologic")
-        except (IOError, os.error) as why:
-            print "Error deleting /var/tmp/sumologic: %s" % (str(why))
-        # except Error as err:
-        #     errors.extend(err.args[0])
     if os.path.isfile(packer_template):
         logging.error("Removing Packer template: %s" %(packer_template))
         os.remove(packer_template)
@@ -202,9 +163,9 @@ class VAction(argparse.Action):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--type',
+        '--template',
         default="base",
-        help="Container Type [default 'base': shouldn't be changed ]"
+        help="Template to use [default: base]"
     )
     parser.add_argument(
         '--os',
@@ -219,7 +180,7 @@ if __name__ == "__main__":
             "Amazon"
         ],
         default="ubuntu",
-        help="Container OS Type [ ubuntu, centos, amazon, etc ]"
+        help="OS Type [ ubuntu, centos, amazon, etc ]"
     )
     parser.add_argument(
         '--release',
@@ -269,7 +230,7 @@ if __name__ == "__main__":
         '--application',
         default="",
         required=True,
-        help="Application to run on container   (required)"
+        help="App to run on container [ reflector, mbcom, thingiverse, etc ]  (required)"
     )
     parser.add_argument(
         '--role',
@@ -281,12 +242,12 @@ if __name__ == "__main__":
         '--image',
         default="",
         required=True,
-        help="Base Container image to use [ foo/bar:latest, etc ] (required)"
+        help="Base Container image to use [ local/app:latest, etc ] (required)"
     )
     parser.add_argument(
         '--repo',
-        default="org/base",
-        help="Repo of container: eg. org/base"
+        default="",
+        help="Repo of container: eg. local/base"
     )
     parser.add_argument(
         '-v',
@@ -327,24 +288,16 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.ERROR, format=log_format)
         os.environ["PACKER_LOG"] = "error"
     args.prefix_platform = ""
-    # if args.application != "ops":
-        # args.prefix_app = "_"+args.application
-    # else:
     args.prefix_app = ""
-    # if args.platform:
-    #     args.prefix_platform = "_"+args.platform
     if args.tag:
+        args.tagname = args.tag
         args.tag = args.role+"."+args.tag
     else:
+        args.tagname = args.role
         args.tag = args.role
     args.prefix = args.repo+args.prefix_app
-    # args.prefix = args.repo+args.prefix_platform+args.prefix_app
     container_name = args.repo+args.prefix_platform+args.prefix_app+args.tag
-    # container_name = args.repo+args.prefix_app+args.tag
-    if args.role == "sumologic":
-        template_name = "sumologic"
-    else:
-        template_name = args.type
+    template_name = args.template
     if len(args.image.split(":")[0].split("/")) < 2:
         image_name = args.image.split(":")[0].split("/")[0]
         image_repo = image_name
@@ -353,15 +306,7 @@ if __name__ == "__main__":
         image_name = args.image.split(":")[0].split("/")[1]
     image_tag = args.image.split(":")[1]
     if args.os == "centos" or args.os == "amazon":
-        # default_packages.append("yum-plugin-priorities deltarpm coreutils at nc bc binutils bind-utils salt-minion salt")
         default_packages.append("yum-plugin-priorities salt-minion salt")
-    # if args.script != "":
-    #     extra_script = '},{\n'
-    #     extra_script = extra_script + '\t"type": "shell",\n'
-    #     extra_script = extra_script + '\t"script": "'+args.script+'",\n'
-    #     extra_script = extra_script + '\t"execute_command": "sudo -E sh \'{{ .Path }}\'"\n'
-    # else:
-    #     extra_script = ""
     default_services.append(args.role)
     packer_values = {
         'image_name': image_name,
@@ -371,7 +316,7 @@ if __name__ == "__main__":
         'platform': args.platform,
         'prefix' : args.prefix,
         'tag': args.tag,
-        'type': args.type,
+        'tagname': args.tagname,
         'release': args.release,
         'os': args.os,
         'application': args.application,
@@ -394,14 +339,19 @@ if __name__ == "__main__":
         'bootstrap_args': bootstrap_args,
         'docker_push': args.push
     }
+    if args.role != 'base':
+        args.cleanup = "true"
+    else:
+        args.cleanup = ""
 
     salt_grains_values = {
-        # needs to automatically nest data
         'tag': args.tag,
         'release': args.release,
         'application': args.application,
         'role': args.role,
-        'environment': args.env
+        'environment': args.env,
+        'cleanup': args.cleanup,
+        'type': 'Docker'
     }
 
     shell_values = {
@@ -413,14 +363,15 @@ if __name__ == "__main__":
     }
 
     services_values = {
-        'runit_services': '',
+        # 'runit_services': '',
         'services_packages': services_packages
     }
 
     logging.error("")
     logging.error("Arg Values:")
     logging.error("\tUsing defined value (tag):         %s" %(args.tag))
-    logging.error("\tUsing defined value (type):        %s" %(args.type))
+    logging.error("\tUsing defined value (tagname):     %s" %(args.tagname))
+    logging.error("\tUsing defined value (template):    %s" %(args.template))
     logging.error("\tUsing defined value (platform):    %s" %(args.platform))
     logging.error("\tUsing defined value (application): %s" %(args.application))
     logging.error("\tUsing defined value (role):        %s" %(args.role))
@@ -458,21 +409,6 @@ if __name__ == "__main__":
         print "\t\t%s: %s" % (val, salt_grains_values[val])
     logging.error("")
     logging.error("")
-    print "copying sumologic config"
-    if args.role == "sumologic":
-        logging.error("\tCopying sumologic configs to /var/tmp/sumologic")
-        if os.path.exists("/var/tmp/sumologic"):
-            try:
-                shutil.rmtree("/var/tmp/sumologic")
-            except (IOError, os.error) as why:
-                print "Error deleting /var/tmp/sumologic: %s" % (str(why))
-        try:
-            shutil.copytree("sumologic", "/var/tmp/sumologic")
-        except (IOError, os.error) as why:
-            print "Error Copying: %s" % (str(why))
-        # except Error as err:
-        #     print "Error err: %s" % (str(err))
-
     if args.clean:
         try:
             os.system("rm /var/tmp/*[0-9]*")
@@ -480,10 +416,7 @@ if __name__ == "__main__":
             print "Error removing old templates: %s" % (why)
     write_packer_template(packer_values, template_name+".jinja2", packer_template, packer_template_path+args.os+"/")
     write_shell_template(shell_values, args.os+".jinja2", shell_script, os_template_path)
-    if args.role == "sumologic":
-        write_services_template(services_values, "services.jinja2", services_script, services_template_path)
-    else:
-        write_salt_grains_template(salt_grains_values, grains_file, salt_grains_template, salt_template_path)
+    write_salt_grains_template(salt_grains_values, grains_file, salt_grains_template, salt_template_path)
     if not args.dry_run:
         launch_packer(packer_binary, packer_template)
     exit(0)
