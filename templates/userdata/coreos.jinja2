@@ -14,10 +14,61 @@ write_files:
           "email": "{{ quay_email }}"
         }
       }
-
+  - path: /run/systemd/system/docker.service.d/40-flannel.conf
+    permissions: 0640
+    owner: root
+    content: |
+      [Unit]
+      Requires=flanneld.service
+      After=flanneld.service
+  - path: /tmp/generate_flannel_metadata.sh
+    permissions: 0640
+    owner: root
+    content: |
+      #!/bin/bash
+      CONF_FILE=/run/systemd/system/fleet.service.d/21-metadata.conf
+      instance_id=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+      instance_type=$(curl -s http://169.254.169.254/latest/meta-data/instance-type)
+      az=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)
+      memory=$(free -m -t | tail -1 | awk '{print $2}')
+      processors=$(egrep -c '^processor[[:space:]]+:' /proc/cpuinfo)
+      region=$${az::-1}
+      sgs=$(curl -s http://169.254.169.254/latest/meta-data/security-groups/ | sed "s/^/sg_/" | sed "s/$/=1/" | tr "\\n", ",")
+      echo "[Service]" > $CONF_FILE
+      echo "Environment='FLEET_METADATA=instance_id=$${instance_id},instance-type=$${instance_type},az=$${az},memory=$${memory},processors=$${processors},region=$${region},$${sgs}'"  >> $CONF_FILE
+      systemctl daemon-reload
+  - path: /opt/bin/docker-enter
+    permissions: 0755
+    owner: root
+    content: |
+      #!/bin/bash
+      all_containers="$(docker ps | rev | awk '{print $1}' | rev | grep -v NAMES)"
+      if [[ $# -ne 1 ]] ; then
+        echo "ERROR: wrong amount of arguments"
+        echo "USAGE: $0 <container-name>"
+        echo "List of Currently Running Containers"
+        echo $${all_containers} | tr ' ' '\n'
+        exit 1
+      fi
+      container="$1"
+      matches="$(echo $${all_containers} | tr ' ' '\n' | grep $${container} | wc -l)"
+      if [[ $${matches} -gt 1 ]] ; then
+        echo "ERROR: too many matches"
+        echo $${all_containers} | tr ' ' '\n' | grep $${container}
+        exit 1
+      elif [[ $${matches} -lt 1 ]] ; then
+        echo "ERROR: not enough matches"
+        echo "List of Currently Running Containers"
+        echo $${all_containers} | tr ' ' '\n'
+        exit 1
+      else
+        container="$(echo $${all_containers} | tr ' ' '\n' | grep $${container})"
+        echo "ENTERING CONTAINER: $${container}"
+        docker exec -ti $${container} bash -l
+        exit 0
+      fi
 users:
-    - name: user
-      system: true
+    - name: wileyj
       groups:
         - sudo
         - docker
@@ -34,7 +85,9 @@ coreos:
     initial-advertise-peer-urls: http://$private_ipv4:2380
     listen-client-urls: http://0.0.0.0:2379,http://0.0.0.0:4001
     listen-peer-urls: http://$private_ipv4:2380,http://$private_ipv4:7001
-
+  fleet:
+      public-ip: $private_ipv4
+      metadata: region=us-east,cluster=CLUSTER
   units:
     - name: format-log.service
       command: start
@@ -90,6 +143,32 @@ coreos:
         Service=docker.service
         [Install]
         WantedBy=sockets.target
-
+    - name: sumologic-collector.service
+      command: start
+      content: |-
+        [Unit]
+        Description=sumo-logic-collector
+        After=docker.service
+        After=set-hostname.service
+        Requires=docker.service
+        Requires=set-hostname.service
+        [Service]
+        Restart=always
+        RestartSec=30
+        Environment=SUMO_ACCESS_ID={{ sumo_access_id }}
+        Environment=SUMO_ACCESS_KEY={{ sumo_access_key }}
+        Environment=DOCKER_IMAGE=org/ops:sumologic.latest
+        ExecStartPre=/usr/bin/docker pull ${DOCKER_IMAGE}
+        ExecStart=/usr/bin/docker run --rm --name="sumo-logic-collector" \
+        --env=SUMO_ACCESS_ID=${SUMO_ACCESS_ID} \
+        --env=SUMO_ACCESS_KEY=${SUMO_ACCESS_KEY} \
+        --env=SUMO_COLLECTOR_NAME=%H \
+        --volume=/srv/log:/srv/log \
+        --volume=/var/run/docker.sock:/var/run/docker.sock \
+        -p 514:514 -p 514:514/udp \
+        ${DOCKER_IMAGE}
+        ExecStop=/usr/bin/docker kill sumo-logic-collector
+    - name: fleet.service
+      command: start
 runcmd:
   - restart docker-tcp.socket
