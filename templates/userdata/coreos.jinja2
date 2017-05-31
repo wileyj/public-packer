@@ -1,174 +1,222 @@
 #cloud-config
 write_files:
-  - path: /root/.dockercfg
-    permissions: 0640
+  - path: /etc/modules-load.d/nf.conf
+    owner: root
+    permissions: 0644
+    content: |
+      nf_conntrack
+  - path: /etc/sysctl.d/startup.conf
+    owner: root
+    permissions: 0644
+    content: |
+      net.ipv4.conf.all.route_localnet=1
+      fs.file-max=2097152
+      #Allow for more PIDs
+      kernel.pid_max=65535
+
+      # Restrict core dumps
+      fs.suid_dumpable=0
+
+      # Hide exposed kernel pointers
+      kernel.kptr_restrict=1
+
+      # Do less swapping
+      vm.swappiness=30
+      vm.dirty_ratio=30
+      vm.dirty_background_ratio=5
+
+      # 50% overcommitment of available memory
+      vm.overcommit_ratio=50
+      vm.overcommit_memory=0
+
+      # Keep at least 64MB of free RAM space available
+      vm.min_free_kbytes=65535
+
+      #Prevent SYN attack
+      net.ipv4.tcp_syncookies=1
+      net.ipv4.tcp_syn_retries=2
+      net.ipv4.tcp_synack_retries=2
+      net.ipv4.tcp_max_syn_backlog=4096
+
+      # Enable IP spoofing protection, turn on source route verification
+      net.ipv4.conf.all.rp_filter=1
+      net.ipv4.conf.default.rp_filter=1
+
+      # Disable ICMP Redirect Acceptance
+      net.ipv4.conf.all.accept_redirects=0
+      net.ipv4.conf.default.accept_redirects=0
+      net.ipv4.conf.all.secure_redirects=0
+      net.ipv4.conf.default.secure_redirects=0
+      net.ipv6.conf.all.accept_redirects=0
+      net.ipv6.conf.default.accept_redirects=0
+
+      # Enable Log Spoofed Packets, Source Routed Packets, Redirect Packets
+      net.ipv4.conf.all.log_martians=1
+      net.ipv4.conf.default.log_martians=1
+
+      # Decrease the time default value for tcp_fin_timeout connection
+      net.ipv4.tcp_fin_timeout=7
+
+      # Decrease the time default value for connections to keep alive
+      net.ipv4.tcp_keepalive_time=300
+      net.ipv4.tcp_keepalive_probes=5
+      net.ipv4.tcp_keepalive_intvl=15
+
+      # Don't relay bootp
+      net.ipv4.conf.all.bootp_relay=0
+
+      # Don't proxy arp for anyone
+      net.ipv4.conf.all.proxy_arp=0
+
+      # Turn on the tcp_timestamps, accurate timestamp make TCP congestion control algorithms work better
+      net.ipv4.tcp_timestamps=1
+
+      # Don't ignore directed pings
+      net.ipv4.icmp_echo_ignore_all=0
+
+      # Enable ignoring broadcasts request
+      net.ipv4.icmp_echo_ignore_broadcasts=1
+
+      # Enable bad error message Protection
+      net.ipv4.icmp_ignore_bogus_error_responses=1
+
+      # Enable a fix for RFC1337 - time-wait assassination hazards in TCP
+      net.ipv4.tcp_rfc1337=1
+
+      # For servers with tcp-heavy workloads, enable 'fq' queue management scheduler (kernel > 3.12)
+      net.core.default_qdisc=fq
+
+      # Turn on the tcp_window_scaling
+      net.ipv4.tcp_window_scaling=1
+
+      # Increase the read-buffer space allocatable
+      net.ipv4.tcp_rmem=8192 87380 16777216
+      net.ipv4.udp_rmem_min=16384
+      net.core.rmem_default=262144
+      net.core.rmem_max=16777216
+
+      # Increase the write-buffer-space allocatable
+      net.ipv4.tcp_wmem=8192 65536 16777216
+      net.ipv4.udp_wmem_min=16384
+      net.core.wmem_default=262144
+      net.core.wmem_max=16777216
+
+      # Increase number of incoming connections
+      net.core.somaxconn=32768
+
+      # Increase number of incoming connections backlog
+      net.core.netdev_max_backlog=16384
+      net.core.dev_weight=64
+
+      # Increase the maximum amount of option memory buffers
+      net.core.optmem_max=65535
+
+      # Increase the tcp-time-wait buckets pool size to prevent simple DOS attacks
+      net.ipv4.tcp_max_tw_buckets=1440000
+
+      # try to reuse time-wait connections, but don't recycle them (recycle can break clients behind NAT)
+      net.ipv4.tcp_tw_recycle=0
+      net.ipv4.tcp_tw_reuse=1
+
+      # Limit number of orphans, each orphan can eat up to 16M (max wmem) of unswappable memory
+      net.ipv4.tcp_max_orphans=16384
+      net.ipv4.tcp_orphan_retries=0
+
+      # don't cache ssthresh from previous connection
+      net.ipv4.tcp_no_metrics_save=1
+      net.ipv4.tcp_moderate_rcvbuf=1
+
+      # Increase size of RPC datagram queue length
+      net.unix.max_dgram_qlen=50
+
+      # Don't allow the arp table to become bigger than this
+      net.ipv4.neigh.default.gc_thresh3=2048
+
+      # Tell the gc when to become aggressive with arp table cleaning.
+      # Adjust this based on size of the LAN. 1024 is suitable for most /24 networks
+      net.ipv4.neigh.default.gc_thresh2=1024
+
+      # Adjust where the gc will leave arp table alone - set to 32.
+      net.ipv4.neigh.default.gc_thresh1=32
+
+      # Adjust to arp table gc to clean-up more often
+      net.ipv4.neigh.default.gc_interval=30
+
+      # Increase TCP queue length
+      net.ipv4.neigh.default.proxy_qlen=96
+      net.ipv4.neigh.default.unres_qlen=6
+
+      # Enable Explicit Congestion Notification (RFC 3168), disable it if it doesn't work for you
+      net.ipv4.tcp_ecn=1
+      net.ipv4.tcp_reordering=3
+
+      # How many times to retry killing an alive TCP connection
+      net.ipv4.tcp_retries2=15
+      net.ipv4.tcp_retries1=3
+
+      # Avoid falling back to slow start after a connection goes idle
+      # keeps our cwnd large with the keep alive connections (kernel > 3.6)
+      net.ipv4.tcp_slow_start_after_idle=0
+
+      # Allow the TCP fastopen flag to be used, beware some firewalls do not like TFO! (kernel > 3.7)
+      net.ipv4.tcp_fastopen=3
+
+      # This will enusre that immediatly subsequent connections use the new values
+      net.ipv4.route.flush=1
+      net.ipv6.route.flush=1
+  - path: /var/lib/iptables/rules-save
+    permissions: 0644
     owner: root
     content: |
-      {
-        "{{ docker_url }}": {
-          "auth": "{{ docker_auth }}",
-          "email": "{{ docker_email }}"
-        },
-        "{{ quay_url }}": {
-          "auth": "{{ quay_auth }}",
-          "email": "{{ quay_email }}"
-        }
-      }
-  - path: /run/systemd/system/docker.service.d/40-flannel.conf
-    permissions: 0640
+      *nat
+      :PREROUTING ACCEPT [449:36308]
+      :INPUT ACCEPT [12:720]
+      :OUTPUT ACCEPT [9062:551275]
+      :POSTROUTING ACCEPT [9062:551275]
+      :DOCKER - [0:0]
+      -A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER
+      -A PREROUTING -d 169.254.170.2/32 -p tcp -m tcp --dport 80 -j DNAT --to-destination 127.0.0.1:51679
+      -A OUTPUT -d 169.254.170.2/32 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 51679
+      COMMIT
+  - path: /etc/motd.d/motd.conf
     owner: root
-    content: |
-      [Unit]
-      Requires=flanneld.service
-      After=flanneld.service
-  - path: /tmp/generate_flannel_metadata.sh
-    permissions: 0640
+    permissions: 0644
+    content:
+      "\n
+      This system is made available to authorized Employees only.\n
+      Unauthorized access, attempts to defeat or circumvent security features,\n
+      to use the system for other than intended purposes, to deny service to\n
+      authorized users, or otherwise to interfere with the system or its operation\n
+      is strictly prohibited. Evidence of such acts will be disclosed to law\n
+      enforcement authorities and may result in criminal prosecution.\n
+      If you are not an authorized employee please logout immediately.\n
+      \n\n"
+  - path: /tmp/update_etcd.sh
     owner: root
-    content: |
-      #!/bin/bash
-      CONF_FILE=/run/systemd/system/fleet.service.d/21-metadata.conf
-      instance_id=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
-      instance_type=$(curl -s http://169.254.169.254/latest/meta-data/instance-type)
-      az=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)
-      memory=$(free -m -t | tail -1 | awk '{print $2}')
-      processors=$(egrep -c '^processor[[:space:]]+:' /proc/cpuinfo)
-      region=$${az::-1}
-      sgs=$(curl -s http://169.254.169.254/latest/meta-data/security-groups/ | sed "s/^/sg_/" | sed "s/$/=1/" | tr "\\n", ",")
-      echo "[Service]" > $CONF_FILE
-      echo "Environment='FLEET_METADATA=instance_id=$${instance_id},instance-type=$${instance_type},az=$${az},memory=$${memory},processors=$${processors},region=$${region},$${sgs}'"  >> $CONF_FILE
-      systemctl daemon-reload
-  - path: /opt/bin/docker-enter
     permissions: 0755
-    owner: root
     content: |
       #!/bin/bash
-      all_containers="$(docker ps | rev | awk '{print $1}' | rev | grep -v NAMES)"
-      if [[ $# -ne 1 ]] ; then
-        echo "ERROR: wrong amount of arguments"
-        echo "USAGE: $0 <container-name>"
-        echo "List of Currently Running Containers"
-        echo $${all_containers} | tr ' ' '\n'
-        exit 1
-      fi
-      container="$1"
-      matches="$(echo $${all_containers} | tr ' ' '\n' | grep $${container} | wc -l)"
-      if [[ $${matches} -gt 1 ]] ; then
-        echo "ERROR: too many matches"
-        echo $${all_containers} | tr ' ' '\n' | grep $${container}
-        exit 1
-      elif [[ $${matches} -lt 1 ]] ; then
-        echo "ERROR: not enough matches"
-        echo "List of Currently Running Containers"
-        echo $${all_containers} | tr ' ' '\n'
-        exit 1
-      else
-        container="$(echo $${all_containers} | tr ' ' '\n' | grep $${container})"
-        echo "ENTERING CONTAINER: $${container}"
-        docker exec -ti $${container} bash -l
-        exit 0
-      fi
-users:
-    - name: wileyj
-      groups:
-        - sudo
-        - docker
-      no-create-home: true
+      IP=`ip -o -f inet addr show eth0 | awk '/scope global/ {print $4}'`
+      RANGE=`echo $$IP | cut -f1-3 -d "."`
+      MASK=`echo $$IP | awk '$1 ~ "^" {mask=$1; sub("^[^/]*","",mask); print mask}'`
+      /usr/bin/etcdctl set /coreos.com/network/config "{ \"Network\": \"$${RANGE}.0/24\" }"
 
 coreos:
   update:
-    reboot-strategy: etcd-lock
-  etcd2:
-    initial-cluster: default={{ etcd_cluster }}
-    initial-cluster-state: existing
-    proxy: on
-    advertise-client-urls: http://$private_ipv4:2379
-    initial-advertise-peer-urls: http://$private_ipv4:2380
-    listen-client-urls: http://0.0.0.0:2379,http://0.0.0.0:4001
-    listen-peer-urls: http://$private_ipv4:2380,http://$private_ipv4:7001
-  fleet:
-      public-ip: $private_ipv4
-      metadata: region=us-east,cluster=CLUSTER
+    reboot-strategy: off
   units:
-    - name: format-log.service
-      command: start
-      content: |
-        [Unit]
-        Description=Formats the log drive
-        After=dev-{{ log_disk }}
-        Requires=dev-{{ log_disk }}.device
-        [Service]
-        Type=oneshot
-        RemainAfterExit=yes
-        ExecStart=/usr/sbin/wipefs -f /dev/{{ log_disk }}
-        ExecStart=/usr/sbin/mkfs.xfs -f /dev/{{ log_disk }}
-    - name: srv-log.mount
-      command: start
-      content: |
-        [Unit]
-        Description=Mount ephemeral to {{ log_mount }}
-        Requires=format-log.service
-        After=format-log.service
-        Before=docker.service
-        [Mount]
-        What=/dev/{{ log_disk }}
-        Where={{ log_mount }}
-        Type=xfs
-    - name: rpc-statd.service
-      command: start
+    - name: systemd-sysctl.service
       enable: true
+      command: start
+    - name: iptables-restore.service
+      enable: true
+      command: start
     - name: etcd2.service
       command: start
     - name: flanneld.service
       command: start
-    - name: update-fleet-metadata.service
-      command: start
-      content: |-
-        [Unit]
-        Description=Update Fleet metadata tag
-        Before=fleet.service
-        Requires=fleet.service
-        [Service]
-        Type=oneshot
-        RemainAfterExit=no
-        EnvironmentFile=/etc/environment
-        ExecStart=/bin/bash /tmp/generate_flannel_metadata.sh
-    - name: docker-tcp.socket
-      command: start
-      content: |-
-        [Unit]
-        Description=Docker Socket for the API
-        [Socket]
-        ListenStream=2375
-        BindIPv6Only=both
-        Service=docker.service
-        [Install]
-        WantedBy=sockets.target
-    - name: sumologic-collector.service
-      command: start
-      content: |-
-        [Unit]
-        Description=sumo-logic-collector
-        After=docker.service
-        After=set-hostname.service
-        Requires=docker.service
-        Requires=set-hostname.service
-        [Service]
-        Restart=always
-        RestartSec=30
-        Environment=SUMO_ACCESS_ID={{ sumo_access_id }}
-        Environment=SUMO_ACCESS_KEY={{ sumo_access_key }}
-        Environment=DOCKER_IMAGE=org/ops:sumologic.latest
-        ExecStartPre=/usr/bin/docker pull ${DOCKER_IMAGE}
-        ExecStart=/usr/bin/docker run --rm --name="sumo-logic-collector" \
-        --env=SUMO_ACCESS_ID=${SUMO_ACCESS_ID} \
-        --env=SUMO_ACCESS_KEY=${SUMO_ACCESS_KEY} \
-        --env=SUMO_COLLECTOR_NAME=%H \
-        --volume=/srv/log:/srv/log \
-        --volume=/var/run/docker.sock:/var/run/docker.sock \
-        -p 514:514 -p 514:514/udp \
-        ${DOCKER_IMAGE}
-        ExecStop=/usr/bin/docker kill sumo-logic-collector
-    - name: fleet.service
-      command: start
-runcmd:
-  - restart docker-tcp.socket
+      drop-ins:
+        - name: 50-network-config.conf
+          content: |
+            [Service]
+            ExecStartPre=/bin/sh /tmp/update_etcd.sh

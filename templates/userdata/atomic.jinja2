@@ -114,8 +114,9 @@ write_files:
         exit 0
       fi
 users:
-    - name: wileyj
+    - name: local
+      system: true
       groups:
-        - sudo
         - docker
       no-create-home: true
+      homedir: /mnt/efs/home/local
