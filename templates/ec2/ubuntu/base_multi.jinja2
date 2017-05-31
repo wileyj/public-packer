@@ -69,9 +69,9 @@
         "type": "salt-masterless",
         "local_state_tree": "{{ salt_state_tree }}",
         "local_pillar_roots": "{{ salt_pillar_root }}",
-        "bootstrap_args": "{{ bootstrap_args }}",
         "no_exit_on_failure": false,
-        "log_level": "debug"
+        "log_level": "debug",
+        "skip_bootstrap": true
     },{
         "type": "shell",
         "script": "{{create_user_script}}",
