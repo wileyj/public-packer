@@ -1,24 +1,22 @@
 #!/usr/bin/env python
 # python packer.py --prefix packer --platform base  --type beanstalk --disk multidisk  --virt hvm --instance t2.micro
-# python packer_docker.py  --tag latest --image <org>/base:latest --platform node
-# python packer_docker.py  --tag latest --image ubuntu:trusty --application <application> --role web --stage dev
-# Naming:
-# org.<os>.<type>_<virt>_<disk>.<prefix>_<YYYYMMDD>
-#   <org>.coreos.docker_hvm_multi.packer_20172212
-#   <org>.centos.base_hvm_multi.packer_20172212
-#   <org>/base_<application>:web.latest
-#   <org>/base:latest
-#   <org>/base_<application>:latest
+# python packer_docker.py  --tag <tag> --image <repo>/<container>:<tag> --platform <platform>
+# python packer_docker.py  --tag <tag> --image <repo>/<container>:<tag> --application <application> --role <role> --env dev
 
-#  python packer.py --os amazon --ssh-user ec2-user --vpc-id vpc-12345678 --subnet-id subnet-12345678 --instance-type t2.micro --virt hvm --prefix packer --disk single --stage dev --type base --region us-east-1  --tag latest
-# rm /var/tmp/*[0-9]* && python packer.py --prefix packer --os centos --ssh-user centos --platform base  --type ec2 --disk singledisk --virt hvm --instance t2.micro --vpc-id vpc-12345678 --subnet-id subnet-12345678 --region us-east-1 --tag latest --stage dev
-# python packer.py --os centos --vpc-id vpc-12345678 --subnet-id subnet-12345678 --instance-type t2.micro --virt hvm --prefix packer --disk multi --stage dev --type docker --region us-east-1 --tag latest --clean
-# python packer.py --os ubuntu --vpc-id vpc-12345678 --subnet-id subnet-12345678 --instance-type t2.micro --virt hvm --prefix packer --disk multi --stage dev --type docker --region us-east-1 --tag latest --clean
-# python packer.py --os atomic --vpc-id vpc-12345678 --subnet-id subnet-12345678 --instance-type t2.micro --virt hvm --prefix packer --disk multi --stage dev --type docker --region us-east-1 --tag latest --clean
-# python packer.py --os coreos --vpc-id vpc-12345678 --subnet-id subnet-12345678 --instance-type t2.micro --virt hvm --prefix packer --disk multi --stage dev --type docker --region us-east-1 --tag latest --clean
+# rm /var/tmp/*[0-9]*
+# python packer.py --os centos --vpc-id vpc-12345678 --subnet-id subnet-12345678 --instance-type t2.micro --virt hvm --prefix packer --disk multi --env dev --type ec2 --region us-east-1 --tag latest --role base
+# python packer.py --os amazon --vpc-id vpc-12345678 --subnet-id subnet-12345678 --instance-type t2.micro --virt hvm --prefix packer --disk multi --env dev --type ec2 --region us-east-1 --tag-latest --role base
+# python packer.py --os atomic --vpc-id vpc-12345678 --subnet-id subnet-12345678 --instance-type t2.micro --virt hvm --prefix packer --disk multi --env dev --type ec2 --region us-east-1 --tag-latest --role base
+# python packer.py --os coreos --vpc-id vpc-12345678 --subnet-id subnet-12345678 --instance-type t2.micro --virt hvm --prefix packer --disk multi --env dev --type ec2 --region us-east-1 --tag-latest --role base
+# python packer.py --os ubuntu --vpc-id vpc-12345678 --subnet-id subnet-12345678 --instance-type t2.micro --virt hvm --prefix packer --disk multi --env dev --type ec2 --region us-east-1 --tag-latest --role base
 
-# python packer.py --os centos --vpc-id vpc-12345678 --subnet-id subnet-12345678 --instance-type t2.micro --virt hvm --prefix packer --disk multi --stage dev --type ec2 --region us-east-1 --tag latest --clean
-# python packer.py --os ubuntu --vpc-id vpc-12345678 --subnet-id subnet-12345678 --instance-type t2.micro --virt hvm --prefix packer --disk multi --stage dev --type ec2 --region us-east-1 --tag latest --clean
+# python packer.py --os centos --vpc-id vpc-12345678 --subnet-id subnet-12345678 --instance-type t2.micro --virt hvm --prefix packer --disk single --env dev --type ec2    --region us-east-1 --tag-latest --ssh-user centos --platform base
+# python packer.py --os centos --vpc-id vpc-12345678 --subnet-id subnet-12345678 --instance-type t2.micro --virt hvm --prefix packer --disk multi  --env dev --type docker --region us-east-1 --tag latest
+# python packer.py --os ubuntu --vpc-id vpc-12345678 --subnet-id subnet-12345678 --instance-type t2.micro --virt hvm --prefix packer --disk multi  --env dev --type docker --region us-east-1 --tag latest
+# python packer.py --os atomic --vpc-id vpc-12345678 --subnet-id subnet-12345678 --instance-type t2.micro --virt hvm --prefix packer --disk multi  --env dev --type docker --region us-east-1 --tag latest
+# python packer.py --os coreos --vpc-id vpc-12345678 --subnet-id subnet-12345678 --instance-type t2.micro --virt hvm --prefix packer --disk multi  --env dev --type docker --region us-east-1 --tag latest
+# python packer.py --os centos --vpc-id vpc-12345678 --subnet-id subnet-12345678 --instance-type t2.micro --virt hvm --prefix packer --disk multi  --env dev --type ec2    --region us-east-1 --tag latest
+# python packer.py --os ubuntu --vpc-id vpc-12345678 --subnet-id subnet-12345678 --instance-type t2.micro --virt hvm --prefix packer --disk multi  --env dev --type ec2    --region us-east-1 --tag latest
 
 
 import argparse
@@ -31,7 +29,6 @@ import jinja2
 import boto3
 
 epoch = time.time()
-cwd = os.getcwd()
 user = os.getlogin()
 secs = 10
 elapsed = 0
@@ -47,15 +44,15 @@ full_day = 86400
 today = datetime.now()
 short_date = str('{:04d}'.format(today.year))+str('{:02d}'.format(today.month))+str('{:02d}'.format(today.day))
 short_hour = str('{:04d}'.format(today.year))+str('{:02d}'.format(today.month))+str('{:02d}'.format(today.day))+"_"+str(current_time)
-sumo_access_id = "<sumologic auth id>"
-sumo_access_key = "<sumologic auth key>"
-quay_auth = "<quay auth key>"
-quay_email = "<quay email id>"
+sumo_access_id = "<sumo_access_id>"
+sumo_access_key = "<sumo_access_key>"
+quay_auth = "<quay_auth_key>"
+quay_email = ""
 quay_url = "https://quay.io"
-docker_auth ="<docker auth id>"
-docker_email ="<docker email id>"
+docker_auth ="<docker_auth_key>"
+docker_email ="<docker_auth_email>"
 docker_url = "https://index.docker.io/v1/"
-etcd_cluster = "<etcd cluster url>:2380"
+etcd_cluster = "http://local.com:2380"
 log_disk = "xvdf"
 log_mount = "/srv/log"
 inline = []
@@ -64,21 +61,19 @@ extra_script = ""
 packer_template = "/var/tmp/packer-"+str(epoch)+".json"
 userdata_dest = "/var/tmp/user_data-"+str(epoch)
 salt_grains_template = "/var/tmp/salt_grains-"+str(epoch)
-grains_file = "salt_grains.jinja2"
+# grains_file = "instance_grains.jinja2"
 shell_dest = "/var/tmp/shell-"+str(epoch)+".sh"
 createuser_dest = "/var/tmp/create_users-"+str(epoch)+".py"
+services_script = "/var/tmp/services-"+str(epoch)+".sh"
 packer_binary = "~/go-workspace/bin/packer"
 curl_binary = "/usr/bin/curl"
-packer_template_path = cwd+"/templates/ec2/"
-salt_template_path = cwd+"/templates/salt/"
-scripts_template_path = cwd+"/templates/scripts/"
-os_template_path = cwd+"/templates/userdata/"
-env = jinja2.Environment(loader=jinja2.FileSystemLoader([cwd+"/templates"]))
-timestamp = datetime.utcnow().isoformat()
+inline = []
+
+
 userdata_source = "user_data.jinja2"
-salt_state_tree = cwd+"/salt/srv/salt"
-salt_pillar_root = cwd+"/salt/srv/pillar"
-bootstrap_args = "-d -M -N -X -q -Z -c /tmp"
+# salt_state_tree = cwd+"/salt/srv/salt"
+# salt_pillar_root = cwd+"/salt/srv/pillar"
+# bootstrap_args = "-d -M -N -X -q -Z -c /tmp"
 default_packages = [
     "git",
     "curl",
@@ -89,6 +84,16 @@ default_packages = [
     "tcpdump",
     "traceroute",
     "rsync"
+]
+
+services_packages = [
+    "runit",
+    "cronie"
+]
+
+default_services = [
+    "runit",
+    "crond"
 ]
 
 default_modules = [
@@ -143,8 +148,8 @@ atomic_owner_alias = ''
 atomic_hvm_minimal = 'CentOS*Atomic*Host*x86_64*HVM*'
 atomic_user = "centos"
 
-repo_address = "s3.amazonaws.com/org-package-repo" # if not in main VPC, use the local address of xxxx
-repo_dns = "s3.amazonaws.com/org-package-repo"
+repo_address = "s3.amazonaws.com/local-package-repo" # if not in main VPC, use the local address of xxxx
+repo_dns = "s3.amazonaws.com/local-package-repo"
 
 def check_and_delete_file(filename):
     """ docstring """
@@ -326,6 +331,36 @@ def write_userdata_file(template_values, template_source, template_dest, templat
     os.close(fd)
     return 0
 
+def write_services_template(template_values, template_source, template_dest, template_path):
+    """ docstring """
+    check_and_delete_file(template_dest)
+    result = ""
+    print "[ EXEC  ] - Writing Services Template %s" % (template_source)
+    print "looking for %s%s to write %s" % (template_path, template_source, template_dest)
+    jinja2_env = jinja2.Environment(loader=jinja2.FileSystemLoader([template_path]))
+    template = jinja2_env.get_template(template_source)
+    result = template.render(template_values)
+    with open(template_dest, 'w') as output:
+    # os.open(template_dest, os.O_CREAT)
+    # fd = os.open(template_dest, os.O_RDWR)
+    # os.write(fd, result)
+        output.write(result)
+        print "\t Adding default_services to %s" % (template_dest)
+        for service in default_services:
+            filename = services_template_path+service+".service"
+            print "\t  Read filename: %s" % (filename)
+            with open(filename, 'r') as f:
+                for line in f:
+                    # os.write(fd, f)
+                    output.write(line)
+                f.closed
+    output.closed
+    file_stat = os.stat(template_dest)
+    file_size = file_stat.st_size
+    print "\tCreated Services Script: %s ( %s )" % (template_dest, file_size)
+    # os.close(fd)
+    return 0
+
 def launch_packer(launch_binary, launch_template):
     """ docstring """
     logging.warning("\tLaunching: %s" % (launch_binary))
@@ -381,8 +416,8 @@ if __name__ == "__main__":
         '--iam-profile',
         nargs='?',
         metavar='',
-        default="ORG.Base",
-        help="IAM Role ( Default: ORG.Base )"
+        default="Base",
+        help="IAM Role"
     )
     parser.add_argument(
         '--release',
@@ -506,16 +541,32 @@ if __name__ == "__main__":
         help="Container Tag [ latest, 0.0.1, etc ] (required)"
     )
     parser.add_argument(
-        '--stage',
+        '--env',
         choices=[
             "dev",
+            "development"
             "staging",
+            "stage",
             "qa",
-            "prod"
+            "QA",
+            "prod",
+            "production"
         ],
         default="dev",
         required=True,
-        help="Stage of the build [ dev, staging, prod, etc ]"
+        help="Env of the build [ dev, staging, prod, etc ]"
+    )
+    parser.add_argument(
+        '--application',
+        default="",
+        # required=True,
+        help="App to run on container  (required if type is docker)"
+    )
+    parser.add_argument(
+        '--role',
+        default="",
+        required=True,
+        help="Application Role [ web, bg, www, etc ]  (required if type is docker)"
     )
     parser.add_argument(
         '-v',
@@ -527,6 +578,11 @@ if __name__ == "__main__":
         '--dry-run',
         action='store_true',
         help="Don't run packer at script conclusion"
+    )
+    parser.add_argument(
+        '--push',
+        action='store_true',
+        help="Push to dockerhub"
     )
     parser.add_argument(
         '--clean',
@@ -550,13 +606,48 @@ if __name__ == "__main__":
         log_format = '%(message)-4s'
         logging.basicConfig(level=logging.ERROR, format=log_format)
         os.environ["PACKER_LOG"] = "error"
+    if args.tag:
+        args.tag = args.role+"."+args.tag
+    else:
+        args.tag = args.role
     args.prefix_platform = ""
+
+    packer_template_path = "templates/"+args.type+"/"
+    salt_template_path = "templates/salt/"
+    scripts_template_path = "templates/scripts/"
+    os_template_path = "templates/userdata/"
+    services_template_path = "templates/runit_services/"
+# grains_file = "instance_grains.jinja2"
+
+    cwd = os.getcwd()
+    env = jinja2.Environment(loader=jinja2.FileSystemLoader([cwd+"/templates"]))
+
+
+    # packer_template_path = cwd+"/templates/ec2/"
+    # salt_template_path = cwd+"/templates/salt/"
+    # scripts_template_path = cwd+"/templates/scripts/"
+    # os_template_path = cwd+"/templates/userdata/"
+    # env = jinja2.Environment(loader=jinja2.FileSystemLoader([cwd+"/templates"]))
+    # timestamp = datetime.utcnow().isoformat()
+
+    bootstrap_cmd   = "curl -L https://bootstrap.saltstack.com -o bootstrap_salt.sh && sh bootstrap_salt.sh -d -M -N -X && echo 'file_client: local' > /etc/salt/minion"
+    bootstrap_run   = "salt-call --local  saltutil.sync_grains && salt-call --local  state.highstate"
+    bootstrap = bootstrap_cmd+" && "+bootstrap_run
+    salt_state_tree = cwd+"/salt/srv/salt"
+    salt_pillar_root = cwd+"/salt/srv/pillar"
+    bootstrap_args = "-d -M -N -X -q -Z -c /tmp"
+    errors = []
+    repo_address = "s3.amazonaws.com/local-package-repo" # if not in main VPC, use the local address of xxxx
+    repo_dns = "s3.amazonaws.com/local-package-repo"
+    user = os.getlogin()
+
+
     if args.platform:
         args.prefix_platform = "_"+args.platform
-    args.prefix = "org."+args.os+"."+args.type+"_"+args.virt+"_"+args.disk+"."+args.prefix.replace(" ", "-")+"_"+short_date
+    args.prefix = "local."+args.os+"_"+args.role+"."+args.type+"_"+args.virt+"_"+args.disk+"."+args.prefix.replace(" ", "-")+"_"+short_date
     # switch for now, we only want to support ec2, base, docker templates
     if args.type != "base" and args.type != "ec2" and args.type != "docker":
-        args.type = "ec2"
+        args.type = "EC2"
     template_name = args.type+"_"+args.disk
     ec2_client = boto3.client('ec2', region_name=args.region)
     if not args.prefix:
@@ -565,6 +656,9 @@ if __name__ == "__main__":
         exit(-1)
     if args.user_data_file:
         userdata_source = args.user_data_file
+    if args.type == 'docker' and not args.application:
+        print 'error: for docker, application arg is requires'
+        exit(-2)
 
     logging.error("args.subnet_id: %s" % (args.subnet_id))
     logging.error("args.vpc_id: %s" % (args.vpc_id))
@@ -600,7 +694,8 @@ if __name__ == "__main__":
         except:
             logging.exception("Packer exception occurred")
     ssh_user = args.ssh_user
-    if args.os == "Amazon" or args.os == "amazon":
+    args.os = args.os.lower()
+    if args.os == "amazon":
         owner_id = amazon_owner_id
         owner_alias = amazon_owner_alias
         default_packages.append("python27-pip")
@@ -613,7 +708,7 @@ if __name__ == "__main__":
             ami = amazon_pv_minimal
         if not args.ssh_user:
             ssh_user = amazon_user
-    elif args.os == "Ubuntu" or args.os == "ubuntu":
+    elif args.os == "ubuntu" or args.os == "debian":
         owner_id = ubuntu_owner_id
         owner_alias = ubuntu_owner_alias
         default_packages.append("vim openssh-client openssh-server python-pip salt-minion")
@@ -625,7 +720,7 @@ if __name__ == "__main__":
             exit(3)
         if not args.ssh_user:
             ssh_user = ubuntu_user
-    elif args.os == "CoreOS" or args.os == "coreos":
+    elif args.os == "coreos":
         owner_id = coreos_owner_id
         owner_alias = coreos_owner_alias
         if args.virt != "pv":
@@ -636,7 +731,7 @@ if __name__ == "__main__":
             exit(3)
         if not args.ssh_user:
             ssh_user = coreos_user
-    elif args.os == "Centos" or args.os == "centos":
+    elif args.os == "centos":
         owner_id = centos_owner_id
         owner_alias = centos_owner_alias
         default_modules.remove("boto3")
@@ -654,7 +749,7 @@ if __name__ == "__main__":
             exit(3)
         if not args.ssh_user:
             ssh_user = centos_user
-    elif args.os == "Atomic" or args.os == "atomic":
+    elif args.os == "atomic":
         owner_id = atomic_owner_id
         owner_alias = atomic_owner_alias
         default_modules.remove("boto3")
@@ -679,6 +774,11 @@ if __name__ == "__main__":
     logging.error("Using defined value (owner_alias): %s" % (owner_alias))
     logging.error("Using defined value (ami): %s" % (ami))
 
+    if args.type == 'docker' or args.type == 'Docker':
+        defined_type = 'Docker'
+    else:
+        defined_type = 'EC2'
+
     packer_values = {
         'source_ami' : get_ec2_images(ami, owner_id, owner_alias),
         'instance_type': args.instance_type,
@@ -694,11 +794,14 @@ if __name__ == "__main__":
         'platform': args.platform,
         'prefix' : args.prefix,
         'tag': args.tag,
-        'type': args.type,
+        'type': defined_type,
         'release': args.release,
         'os': args.os,
-        'stage': args.stage,
+        'application': args.application,
+        'role': args.role,
+        'environment': args.env,
         'script': shell_dest,
+        'services_script': services_script,
         'template': template_name,
         'sudo': "{{ .Path }}",
         'timestamp': timestamp,
@@ -711,7 +814,13 @@ if __name__ == "__main__":
         'salt_state_tree': salt_state_tree,
         'salt_pillar_root': salt_pillar_root,
         'bootstrap_args': bootstrap_args,
+        'docker_push': args.push
     }
+
+    if args.role == 'base':
+        args.cleanup = "true"
+    else:
+        args.cleanup = ""
 
     salt_grains_values = {
         'platform': args.platform,
@@ -720,20 +829,25 @@ if __name__ == "__main__":
         'vpc_id': args.vpc_id,
         'tag': args.tag,
         'release': args.release,
-        'stage': args.stage,
-        'subnet_id': args.subnet_id
+        'environment': args.env,
+        'subnet_id': args.subnet_id,
+        'cleanup': args.cleanup,
+        'application': args.application,
+        'role': args.role,
+        'type': defined_type,
+        'build_type': 'Packer'
     }
 
     userdata_values = {
         'os': args.os,
         'repo_address': repo_address,
-        'exclude_list': exclude_list,
+        'exclude_list': exclude_list#,
         # 'image_name': image_name,
         # 'image_tag': image_tag
-        'sumo_access_id': sumo_access_id,
-        'sumo_access_key': sumo_access_key
+        # 'sumo_access_id': sumo_access_id,
+        # 'sumo_access_key': sumo_access_key
     }
-    if args.type == "docker" or args.type == "Docker" or args.os == "atomic" or args.os == "coreos":
+    if defined_type == "Docker" or args.os == "atomic" or args.os == "coreos":
         userdata_values['quay_auth'] = quay_auth
         userdata_values['quay_email'] = quay_email
         userdata_values['quay_url'] = quay_url
@@ -748,12 +862,18 @@ if __name__ == "__main__":
         'os': args.os
     }
 
+    services_values = {
+        'runit_services': '',
+        'services_packages': services_packages
+    }
+
     logging.error("")
     logging.error("Arg Values:")
     logging.error("\tUsing defined value (tag):         %s" %(args.tag))
     logging.error("\tUsing defined value (type):        %s" %(args.type))
+    logging.error("\tUsing defined value (defined_type):%s" %(defined_type))
     logging.error("\tUsing defined value (platform):    %s" %(args.platform))
-    logging.error("\tUsing defined value (stage):       %s" %(args.stage))
+    logging.error("\tUsing defined value (env):         %s" %(args.env))
     logging.error("\tUsing defined value (release):     %s" %(args.release))
     logging.error("\tUsing defined value (os):          %s" %(args.os))
     logging.error("\tUsing defined value (verbose):     %s" %(args.verbose))
@@ -805,7 +925,11 @@ if __name__ == "__main__":
     write_user_template('', "create_users.jinja2", createuser_dest, scripts_template_path)
     write_userdata_file(userdata_values, args.os+".jinja2", userdata_dest, os_template_path)
     write_shell_template(shell_values, 'shell.jinja2', shell_dest, scripts_template_path)
-    write_salt_grains_template(salt_grains_values, "host_grains.jinja2", salt_grains_template, salt_template_path)
+    if args.role == "sumologic":
+        write_services_template(services_values, "services.jinja2", services_script, services_template_path)
+    else:
+        write_salt_grains_template(salt_grains_values, args.type+"_grains.jinja2", salt_grains_template, salt_template_path)
+    # write_salt_grains_template(salt_grains_values, "host_grains.jinja2", salt_grains_template, salt_template_path)
     if not args.dry_run:
         if args.virt != "docker":
             if find_image(args.prefix) != 100:

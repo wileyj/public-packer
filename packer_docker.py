@@ -1,13 +1,10 @@
 #!/usr/bin/env python
-# python packer_docker.py  --tag <tag> --image <image> --role <role> --application <application> --repo <docker repo> --env dev --push
-# python packer_docker.py  --tag <application> --image ubuntu:trusty --role base --application ops --repo <org>/ops --env dev --push
-#   creates container - <org>/ops:base.<application>
-# python packer_docker.py  --tag latest --image ubuntu:trusty --application <application> --role web --repo <org>/base_<application> --env dev
-
-# python packer_docker.py  --tag latest --image centos:7 --application ops --role base --env dev --os centos --type base --repo <org>/ops
-# python packer_docker.py  --tag latest --image <org>/ops:base.latest --application ops --role sumologic --env dev --os centos --type sumologic --repo <org>/ops
-# python packer_docker.py  --tag latest --image <org>/ops:base.latest --application platform --role varnish --env dev --os centos --type base --repo <org>/ops
-# python packer_docker.py  --tag latest --image <org>/ops:base.latest --application shared --role varnish --env dev --os centos --type base --repo <org>/ops
+# python packer_docker.py  --tag ubuntu --image ubuntu:trusty --role base --application ops --repo local/ops --env dev --push
+# python packer_docker.py  --tag centos --image centos:7 --application ops --role base --env dev --os centos --template base --repo local/ops --push
+# python packer_docker.py  --tag latest --image centos:7 --application ops --role base --env dev --os centos --template base --repo local/ops --push
+# python packer_docker.py  --tag latest --image local/ops:base.centos --application ops --role sumologic --env dev --os centos --template base --repo local/ops --push
+# python packer_docker.py  --tag latest --image local/ops:base.centos --application shared --role varnish --env dev --os centos --template base --repo local/ops --push
+# python packer_docker.py  --tag <tag> --image ubuntu:trusty --application <app name> --role <role name> --repo <repo/name>  --env <stage> --push
 
 import argparse
 import logging
@@ -127,6 +124,31 @@ def write_shell_template(template_values, template_source, template_dest, templa
     os.close(fd)
     return 0
 
+# def write_services_template(template_values, template_source, template_dest, template_path):
+#     """ docstring """
+#     check_and_delete_file(template_dest)
+#     result = ""
+#     print "[ EXEC  ] - Writing Services Template %s" % (template_source)
+#     print "looking for %s%s to write %s" % (template_path, template_source, template_dest)
+#     jinja2_env = jinja2.Environment(loader=jinja2.FileSystemLoader([template_path]))
+#     template = jinja2_env.get_template(template_source)
+#     result = template.render(template_values)
+#     with open(template_dest, 'w') as output:
+#         output.write(result)
+#         print "\t Adding default_services to %s" % (template_dest)
+#         for service in default_services:
+#             filename = services_template_path+service+".service"
+#             print "\t  Read filename: %s" % (filename)
+#             with open(filename, 'r') as f:
+#                 for line in f:
+#                     output.write(line)
+#                 f.closed
+#     output.closed
+#     file_stat = os.stat(template_dest)
+#     file_size = file_stat.st_size
+#     print "\tCreated Services Script: %s ( %s )" % (template_dest, file_size)
+#     return 0
+
 def launch_packer(launch_binary, launch_template):
     """ docstring """
     logging.warning("\tLaunching: %s" % (launch_binary))
@@ -208,7 +230,7 @@ if __name__ == "__main__":
         '--tag',
         default="",
         required=True,
-        help="Container Tag [ latest, reflector, 0.0.1, etc ] (required)"
+        help="Container Tag [ latest, 0.0.1, etc ] (required)"
     )
     parser.add_argument(
         '--env',
@@ -230,24 +252,24 @@ if __name__ == "__main__":
         '--application',
         default="",
         required=True,
-        help="App to run on container [ reflector, mbcom, thingiverse, etc ]  (required)"
+        help="App to run on container  (required)"
     )
     parser.add_argument(
         '--role',
         default="",
         required=True,
-        help="Application Role [ web, bg, www, etc ]  (required)"
+        help="Application Role [ web, redis, etc ]  (required)"
     )
     parser.add_argument(
         '--image',
         default="",
         required=True,
-        help="Base Container image to use [ local/app:latest, etc ] (required)"
+        help="Base Container image to use  (required)"
     )
     parser.add_argument(
         '--repo',
-        default="",
-        help="Repo of container: eg. local/base"
+        default="local/base",
+        help="Repo of container: eg. name/base"
     )
     parser.add_argument(
         '-v',
@@ -351,7 +373,8 @@ if __name__ == "__main__":
         'role': args.role,
         'environment': args.env,
         'cleanup': args.cleanup,
-        'type': 'Docker'
+        'type': 'Docker',
+        'build_type': 'Packer'
     }
 
     shell_values = {
