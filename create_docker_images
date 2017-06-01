@@ -1,0 +1,14 @@
+python packer_docker.py --tag ubuntu --image ubuntu:trusty --application ops --role base --os ubuntu --repo local/base_app --template base --env dev --push
+python packer_docker.py --tag latest --image ubuntu:trusty --application app --role web --os ubuntu --repo local/base_app --template base --env dev --push
+python packer_docker.py --tag latest --image ubuntu:trusty --application app --role cloudslice --os ubuntu --repo local/base_app --template base --env dev --push
+python packer_docker.py --tag latest --image ubuntu:trusty --application app --role push --os ubuntu --repo local/base_app --template base --env dev --push
+python packer_docker.py --tag latest --image ubuntu:trusty --application app --role jobs --os ubuntu --repo local/base_app --template base --env dev --push
+python packer_docker.py --tag latest --image ubuntu:trusty --application app --role img --os ubuntu --repo local/base_app --template base --env dev --push
+python packer_docker.py --tag latest --image ubuntu:trusty --application app --role bg --os ubuntu --repo local/base_app --template base --env dev --push
+python packer_docker.py --tag latest --image ubuntu:trusty --application app --role obj --os ubuntu --repo local/base_app --template base --env dev --push
+
+python packer_docker.py --tag centos --image centos:7 --application ops --role base --os centos --repo local/ops --template base --env dev --push
+python packer_docker.py --tag latest --image centos:7 --application ops --role base --os centos --repo local/ops --template base --env dev --push
+python packer_docker.py --tag latest --image centos:7 --application ops --role sumologic --os centos --repo local/ops --template sumologic --env dev --push
+python packer_docker.py --tag latest --image centos:7 --application ops --role sumologic --os centos --repo local/ops --template base --env dev --push
+python packer_docker.py --tag latest --image centos:7 --application shared --role varnish --os centos --repo local/ops --template base --env dev --push
