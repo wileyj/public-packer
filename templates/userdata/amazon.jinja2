@@ -20,20 +20,24 @@ sudo yum install -y \
     rsync
 sudo yum clean all
 
-cat << EOF > /etc/yum.repos.d/local.repo
-[local_x86_64]
+cat << EOF > /etc/yum.repos.d/temp.repo
+[temp_x86_64]
 name=local_x86_64
 baseurl=http://{{repo_address}}/yum/RPMS/x86_64
-#exclude={{exclude_list}}
-gpgcheck=0
-priority=1
+failovermethod=priority
 enabled=1
+priority=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=http://{{repo_address}}/RPM-GPG-KEY-wileyj
 
 [local_noarch]
 name=local_noarch
 baseurl=http://{{repo_address}}/yum/RPMS/noarch
-#exclude={{exclude_list}}
-gpgcheck=0
-priority=1
+failovermethod=priority
 enabled=1
+priority=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=http://{{repo_address}}/RPM-GPG-KEY-wileyj
 EOF
