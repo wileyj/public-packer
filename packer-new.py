@@ -12,14 +12,14 @@
 #     multi
 # role:
 #     base
-# python packer-new.py --type ec2 --tag latest --region us-west-2 --application ops --role base --env dev --os centos --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk single --dry-run --clean
-# python packer-new.py --type ec2 --tag latest --region us-west-2 --application ops --role base --env dev --os centos --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk multi  --dry-run --clean
-# python packer-new.py --type ec2 --tag latest --region us-west-2 --application ops --role base --env dev --os amazon --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk single --dry-run --clean
-# python packer-new.py --type ec2 --tag latest --region us-west-2 --application ops --role base --env dev --os amazon --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk multi  --dry-run --clean
-# python packer-new.py --type ec2 --tag latest --region us-west-2 --application ops --role base --env dev --os atomic --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk single --dry-run --clean
-# python packer-new.py --type ec2 --tag latest --region us-west-2 --application ops --role base --env dev --os atomic --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk multi  --dry-run --clean
-# python packer-new.py --type ec2 --tag latest --region us-west-2 --application ops --role base --env dev --os coreos --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk single --dry-run --clean
-# python packer-new.py --type ec2 --tag latest --region us-west-2 --application ops --role base --env dev --os coreos --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk multi  --dry-run --clean
+# python packer-new.py --type ec2 --tag latest --region us-west-2 --public-ip True --application ops --role base --env dev --os centos --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk single --dry-run --clean
+# python packer-new.py --type ec2 --tag latest --region us-west-2 --public-ip True --application ops --role base --env dev --os centos --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk multi  --dry-run --clean
+# python packer-new.py --type ec2 --tag latest --region us-west-2 --public-ip True --application ops --role base --env dev --os amazon --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk single --dry-run --clean
+# python packer-new.py --type ec2 --tag latest --region us-west-2 --public-ip True --application ops --role base --env dev --os amazon --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk multi  --dry-run --clean
+# python packer-new.py --type ec2 --tag latest --region us-west-2 --public-ip True --application ops --role base --env dev --os atomic --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk single --dry-run --clean
+# python packer-new.py --type ec2 --tag latest --region us-west-2 --public-ip True --application ops --role base --env dev --os atomic --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk multi  --dry-run --clean
+# python packer-new.py --type ec2 --tag latest --region us-west-2 --public-ip True --application ops --role base --env dev --os coreos --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk single --dry-run --clean
+# python packer-new.py --type ec2 --tag latest --region us-west-2 --public-ip True --application ops --role base --env dev --os coreos --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk multi  --dry-run --clean
 
 # docker
 # image: centos:7
@@ -360,8 +360,17 @@ if __name__ == "__main__":
         '--iam-profile',
         nargs='?',
         metavar='',
-        default="Base",
+        default="MOIL.Base",
         help="IAM Role"
+    )
+    parser.add_argument(
+        '--public-ip',
+        choices=[
+            "True",
+            "False"
+        ],
+        default="False",
+        help="For ec2 builds, associates a public IP with the ec2 host"
     )
     parser.add_argument(
         '--release',
@@ -602,6 +611,7 @@ if __name__ == "__main__":
         args.prefix = args.repo+args.prefix_app
         container_name = args.repo+args.prefix_platform+args.prefix_app+args.tag
         template_name = args.template
+        default_packages = []
         #check for required args. only these matter
         if not args.tag or not args.image or not args.application or not args.role or not args.env:
             print "Missing Docker Args...exit(-4)"
@@ -714,10 +724,10 @@ if __name__ == "__main__":
         default_modules.remove("boto3")
         default_modules.remove("awscli")
         default_modules.remove("botocore")
-        default_packages.append("vim-enhanced openssh openssh-clients openssh-server python-pip python-setuptools python-boto3 python-botocore")
+        default_packages.append("python-pip python-setuptools python-boto3 python-botocore salt-minion")
+        if args.type != "docker":
+            default_packages.append("vim-enhanced openssh openssh-clients openssh-server")
         #default_packages.append("python3 python3-pip python3-setuptools python3-boto3 python3-botocore")
-        default_packages.append("salt-minion")
-        # default_packages.append("")
         if args.virt != "pv":
             logging.error("Using centos OS %s" % (args.os))
             ami = centos_hvm_minimal
@@ -792,7 +802,8 @@ if __name__ == "__main__":
         'salt_state_tree': salt_state_tree,
         'salt_pillar_root': salt_pillar_root,
         'bootstrap_args': bootstrap_args,
-        'docker_push': args.push
+        'docker_push': args.push,
+        'public_ip': args.public_ip
     }
 
     if args.role == 'base':
@@ -897,15 +908,18 @@ if __name__ == "__main__":
         print "\t\t%s: %s" % (val, salt_grains_values[val])
     logging.error("")
     logging.error("")
-    write_template(packer_values, template_name+".jinja2", packer_template, packer_template_path+args.os+"/", "packer")
-    write_template(userdata_values, args.os+".jinja2", userdata_dest, os_template_path, "userdata")
-    write_template(shell_values, 'shell.jinja2', shell_dest, scripts_template_path, "shell")
     if args.type == "ecs":
         write_template('', "create_users.jinja2", createuser_dest, scripts_template_path, "create_users")
+    else:
+        packer_values['create_user_script'] = ""
+
     if args.role == "sumologic":
         write_template(services_values, "services.jinja2", services_script, services_template_path, "services")
     else:
         write_template(salt_grains_values, args.type+"_grains.jinja2", salt_grains_template, salt_template_path, "salt grains")
+    write_template(packer_values, template_name+".jinja2", packer_template, packer_template_path+args.os+"/", "packer")
+    write_template(userdata_values, args.os+".jinja2", userdata_dest, os_template_path, "userdata")
+    write_template(shell_values, 'shell.jinja2', shell_dest, scripts_template_path, "shell")
     if not args.dry_run:
         if args.type != "docker":
             if find_image(args.prefix) != 100:
