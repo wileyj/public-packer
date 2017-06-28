@@ -7,12 +7,6 @@
         "pull": "true"
     }],
     "provisioners":[{
-{% if sudo and sudo != "None" %}
-        "type": "shell",
-        "script": "{{script}}",
-        "execute_command": "sudo -E sh '{{sudo}}'"
-    },{
-{% endif %}
         "type": "shell",
         "inline": [
             {% if os == "ubuntu" %}"apt-get update -y"{% else %}"yum update -y{{package}}"{% endif %},
@@ -34,6 +28,12 @@
         "type": "shell",
         "script": "{{ extra_script }}",
         "execute_command": "sudo -E sh '{% raw %}{{ .Path }}{% endraw %}' {{ extra_script_args }}"
+{% endif %}
+{% if sudo and sudo != "None" %}
+    },{
+        "type": "shell",
+        "script": "{{script}}",
+        "execute_command": "sudo -E sh '{{sudo}}'"
 {% endif %}
     }],
     "post-processors": [[

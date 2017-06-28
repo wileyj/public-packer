@@ -7,11 +7,9 @@
         "pull": "true"
     }],
     "provisioners":[{
-{% if sudo and sudo != "None" %}
         "type": "shell",
-        "script": "{{script}}"
+        "script": "{{user_data_file}}"
     },{
-{% endif %}
         "type": "shell",
         "inline": [
             {% if os == "ubuntu" %}"apt-get update -y"{% else %}"yum update -y{{package}}"{% endif %},
@@ -38,11 +36,20 @@
     },{
         "type": "shell",
         "inline": [
-            "yum remove -y salt* zeromq dmidecode",
-            "yum remove -y python-backports python-backports.ssl_match_hostname python-backports_abc python-M2Crypto python-certifi python-enum34 python-futures python-cffi python-cryptography python-idna python-pycparser python-paramiko python-singledispatch python-pycrypto python-tornado python-websocket-client python-typing python-pyzmq",
+            "yum remove -y salt salt-minion zeromq dmidecode python-backports python-backports_abc python-backports.ssl_match_hostname python-botocore python-certifi python-cffi python-click python-cryptography python-dateutil python-docutils python-enum34 python-futures python-idna python-itsdangerous python-Jinja2 python-jmespath python-M2Crypto python-MarkupSafe python-msgpack-python python-paramiko python-pyasn1 python-pycparser python-pycrypto python-PyYAML python-pyzmq python-requests python-singledispatch python-six python-tornado python-typing python-vine python-websocket-client python-Werkzeug"
+        ]
+{% endif %}
+    },{
+        "type": "shell",
+        "inline": [
             "rm -rf /srv/salt /srv/pillar /srv/reactor /var/cache/salt",
+            "yum remove -y dmidecode telnet vim-common tcpdump openssh-server strace e2fsprogs* wget nmap*",
             "yum clean all"
         ]
+{% if sudo and sudo != "None" %}
+    },{
+        "type": "shell",
+        "script": "{{script}}"
 {% endif %}
     }],
     "post-processors": [[

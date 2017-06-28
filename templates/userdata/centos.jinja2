@@ -1,10 +1,10 @@
 #!/bin/sh
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
+export PATH="/usr/moil/sbin:/usr/moil/bin:/usr/sbin:/usr/bin"
 yum install -y sudo
-cat << EOF > /etc/yum.repos.d/temp.repo
-[temp_x86_64]
-name=local_x86_64
-baseurl=http://{{repo_address}}/yum/RPMS/x86_64
+cat << EOF > /etc/yum.repos.d/moil.repo
+[moil_x86_64]
+name=moil_x86_64
+baseurl=http://{{repo_address}}/x86_64
 failovermethod=priority
 enabled=1
 priority=1
@@ -12,9 +12,9 @@ gpgcheck=1
 repo_gpgcheck=1
 gpgkey=http://{{repo_address}}/RPM-GPG-KEY-wileyj
 
-[local_noarch]
-name=local_noarch
-baseurl=http://{{repo_address}}/yum/RPMS/noarch
+[moil_noarch]
+name=moil_noarch
+baseurl=http://{{repo_address}}/noarch
 failovermethod=priority
 enabled=1
 priority=1

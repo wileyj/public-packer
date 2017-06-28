@@ -12,7 +12,14 @@
 #     multi
 # role:
 #     base
-# python packer-new.py --os centos --vpc-id vpc-xxxxxx --subnet-id subnet-xxxxxx --instance-type t2.micro --virt hvm --prefix packer --disk multi  --env dev --type ec2    --region us-east-1 --tag latest --dry-run --clean
+# python packer-new.py --type ec2 --tag latest --region us-west-2 --application ops --role base --env dev --os centos --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk single --dry-run --clean
+# python packer-new.py --type ec2 --tag latest --region us-west-2 --application ops --role base --env dev --os centos --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk multi  --dry-run --clean
+# python packer-new.py --type ec2 --tag latest --region us-west-2 --application ops --role base --env dev --os amazon --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk single --dry-run --clean
+# python packer-new.py --type ec2 --tag latest --region us-west-2 --application ops --role base --env dev --os amazon --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk multi  --dry-run --clean
+# python packer-new.py --type ec2 --tag latest --region us-west-2 --application ops --role base --env dev --os atomic --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk single --dry-run --clean
+# python packer-new.py --type ec2 --tag latest --region us-west-2 --application ops --role base --env dev --os atomic --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk multi  --dry-run --clean
+# python packer-new.py --type ec2 --tag latest --region us-west-2 --application ops --role base --env dev --os coreos --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk single --dry-run --clean
+# python packer-new.py --type ec2 --tag latest --region us-west-2 --application ops --role base --env dev --os coreos --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk multi  --dry-run --clean
 
 # docker
 # image: centos:7
@@ -24,12 +31,12 @@
 #    centos
 # role
 #    base
-#    varnish
-#    sumologic
 #    web
+#    redis
+#    varnish
 # template:
 #    base
-# python packer-new.py  --type docker --tag centos --image centos:7 --application ops --role base --env dev --os centos --template base --repo local/ops --region us-west-2 --dry-run --clean
+# python packer-new.py  --type docker --tag centos --image centos:7 --env dev --os centos --template base --repo wileyj/ops --region us-west-2 --application ops --role base --clean --dry-run
 
 import argparse
 import logging
@@ -82,6 +89,7 @@ inline = []
 
 userdata_source = "user_data.jinja2"
 default_packages = [
+    "sudo",
     "git",
     "curl",
     "telnet",
@@ -170,41 +178,46 @@ def find_image(image_name):
     else:
         return 100
 
-def get_ec2_images(ami, owner_id, owner_alias):
+def get_ec2_images(ami, owner_id, owner_alias, exec_type):
     """ docstring """
     print "filtering ami based on :"
     print "\t ami: %s" % (ami)
     print "\t owner_id: %s" % (owner_id)
     print "\t owner_alias: %s" % (owner_alias)
+    print "\t exec_type: %s" % (exec_type)
     print ""
-    if owner_alias:
+    if exec_type != "docker":
+        if owner_alias:
 
-        images = ec2_client.describe_images(
-            Filters=[
-                {'Name': 'root-device-type', 'Values': ['ebs']},
-                {'Name': 'name', 'Values': [ami]},
-                {'Name': 'owner-alias', 'Values': [owner_alias]},
-                {'Name': 'virtualization-type', 'Values': [args.virt]},
-                {'Name': 'owner-id', 'Values': [owner_id]}
-            ]
-        )
+            images = ec2_client.describe_images(
+                Filters=[
+                    {'Name': 'root-device-type', 'Values': ['ebs']},
+                    {'Name': 'name', 'Values': [ami]},
+                    {'Name': 'owner-alias', 'Values': [owner_alias]},
+                    {'Name': 'virtualization-type', 'Values': [args.virt]},
+                    {'Name': 'owner-id', 'Values': [owner_id]}
+                ]
+            )
+        else:
+            images = ec2_client.describe_images(
+                Filters=[
+                    {'Name': 'root-device-type', 'Values': ['ebs']},
+                    {'Name': 'name', 'Values': [ami]},
+                    {'Name': 'virtualization-type', 'Values': [args.virt]},
+                    {'Name': 'owner-id', 'Values': [owner_id]}
+                ]
+            )
+        image_list = []
+        for image in images['Images']:
+            # print "image: %s" % (image)
+            image_list.append(image)
+            #   image_list.sort( key=lambda x:datetime.datetime.strptime(x['CreationDate'], '%Y-%m-%dT%H:%M:%S.000Z'))
+            image_list.sort( key=lambda x:datetime.strptime(x['CreationDate'], '%Y-%m-%dT%H:%M:%S.000Z'))
+        image_id = image_list[len(image_list)-1]['ImageId']
+        return image_id
     else:
-        images = ec2_client.describe_images(
-            Filters=[
-                {'Name': 'root-device-type', 'Values': ['ebs']},
-                {'Name': 'name', 'Values': [ami]},
-                {'Name': 'virtualization-type', 'Values': [args.virt]},
-                {'Name': 'owner-id', 'Values': [owner_id]}
-            ]
-        )
-    image_list = []
-    for image in images['Images']:
-        # print "image: %s" % (image)
-        image_list.append(image)
-        #   image_list.sort( key=lambda x:datetime.datetime.strptime(x['CreationDate'], '%Y-%m-%dT%H:%M:%S.000Z'))
-        image_list.sort( key=lambda x:datetime.strptime(x['CreationDate'], '%Y-%m-%dT%H:%M:%S.000Z'))
-    image_id = image_list[len(image_list)-1]['ImageId']
-    return image_id
+        print "Skipping get_ec2_images since we're doing %s" % (exec_type)
+        return False
 
 def delete_image(images):
     """ docstring """
@@ -324,9 +337,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--type',
-        default="base",
+        default="",
+        required=True,
         choices=[
-            "base",
             "docker",
             "ec2"
         ],
@@ -556,6 +569,8 @@ if __name__ == "__main__":
         args.tag = args.role+"."+args.tag
     else:
         args.tag = args.role
+    # convert args.type to lc
+    args.type.lower()
     args.prefix_platform = ""
     args.prefix_app = ""
     packer_template_path = "templates/"+args.type+"/"
@@ -742,7 +757,7 @@ if __name__ == "__main__":
         defined_type = 'EC2'
 
     packer_values = {
-        'source_ami' : get_ec2_images(ami, owner_id, owner_alias),
+        'source_ami' : get_ec2_images(ami, owner_id, owner_alias, args.type),
         'instance_type': args.instance_type,
         'instance_profile': args.iam_profile,
         'ssh_user': ssh_user,
@@ -804,7 +819,7 @@ if __name__ == "__main__":
     userdata_values = {
         'os': args.os,
         'repo_address': repo_address,
-        'exclude_list': exclude_list#,
+        'exclude_list': exclude_list,
         # 'image_name': image_name,
         # 'image_tag': image_tag
         # 'sumo_access_id': sumo_access_id,
