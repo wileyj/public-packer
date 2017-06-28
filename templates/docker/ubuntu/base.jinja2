@@ -7,12 +7,6 @@
         "pull": "true"
     }],
     "provisioners":[{
-{% if sudo and sudo != "None" %}
-        "type": "shell",
-        "script": "{{script}}",
-        "execute_command": "sudo -E sh '{{sudo}}'"
-    },{
-{% endif %}
         "type": "shell",
         "inline": [
             {% if os == "ubuntu" %}"apt-get update -y"{% else %}"yum update -y{{package}}"{% endif %},
@@ -44,6 +38,12 @@
             "rm -rf /srv/salt /srv/pillar /srv/reactor /var/cache/salt",
             "apt-get autoremove -y"
         ]
+{% endif %}
+{% if sudo and sudo != "None" %}
+    },{
+        "type": "shell",
+        "script": "{{script}}",
+        "execute_command": "sudo -E sh '{{sudo}}'"
 {% endif %}
     }],
     "post-processors": [[
