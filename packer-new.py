@@ -687,7 +687,7 @@ if __name__ == "__main__":
         owner_alias = amazon_owner_alias
         default_packages.append("python27-pip")
         default_packages.append("aws-apitools-common")
-        default_packages.append("aws-cli python-pycrypto")
+        default_packages.append("aws-cli python-pycrypto python-pyzmq zeromq")
         default_modules.append("salt")
         if args.virt != "pv":
             logging.error("Using Amazon OS %s" % (args.os))
