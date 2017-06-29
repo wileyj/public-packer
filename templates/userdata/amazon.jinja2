@@ -1,5 +1,5 @@
 #!/bin/sh
-export PATH="/usr/moil/sbin:/usr/moil/bin:/usr/sbin:/usr/bin"
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/bin"
 yum install -y sudo
 cat << EOF > /etc/yum.repos.d/moil.repo
 [moil_x86_64]
@@ -11,6 +11,7 @@ priority=1
 gpgcheck=1
 repo_gpgcheck=1
 gpgkey=http://{{repo_address}}/RPM-GPG-KEY-wileyj
+exclude=libxml2*
 
 [moil_noarch]
 name=moil_noarch
@@ -21,4 +22,5 @@ priority=1
 gpgcheck=1
 repo_gpgcheck=1
 gpgkey=http://{{repo_address}}/RPM-GPG-KEY-wileyj
+exclude=libxml2*
 EOF
