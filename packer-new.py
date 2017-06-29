@@ -688,6 +688,7 @@ if __name__ == "__main__":
         default_packages.append("python27-pip")
         default_packages.append("aws-apitools-common")
         default_packages.append("aws-cli")
+        default_modules.append("salt")
         if args.virt != "pv":
             logging.error("Using Amazon OS %s" % (args.os))
             ami = amazon_hvm_minimal
