@@ -56,14 +56,13 @@
             "echo '' | sudo tee --append /etc/ssh/sshd_config > /dev/null",
             "echo 'ForceCommand /usr/sbin/login_duo'| sudo tee --append /etc/ssh/sshd_config > /dev/null"
         ]
-    }, {
-        "type": "shell",
-        "script": "{{create_user_script}}",
-        "execute_command": "sudo -E python '{{sudo}}' --group ops"
-    }, {
-        "type": "shell",
-        "script": "{{create_user_script}}",
-        "execute_command": "sudo -E python '{{sudo}}' --group ui"
+{% if create_user_script != "" %}
+    },{
+            "type": "shell",
+            "script": "{{create_user_script}}",
+            "execute_command": "sudo -E python '{{sudo}}' --group ops"
+
+{% endif %}
 {{ extra_script }}
     }]
 }

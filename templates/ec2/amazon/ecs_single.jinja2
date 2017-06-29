@@ -74,10 +74,13 @@
         "bootstrap_args": "{{ bootstrap_args }}",
         "no_exit_on_failure": false,
         "log_level": "debug"
+{% if create_user_script != "" %}
     },{
-        "type": "shell",
-        "script": "{{create_user_script}}",
-        "execute_command": "sudo -E python '{{sudo}}' --group ops"
+            "type": "shell",
+            "script": "{{create_user_script}}",
+            "execute_command": "sudo -E python '{{sudo}}' --group ops"
+
+{% endif %}
     },{
         "type": "shell",
         "execute_command": "sudo -S sh '{{ sudo }}'",
