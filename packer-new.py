@@ -12,6 +12,7 @@
 #     multi
 # role:
 #     base
+# ami-f6f7e38f
 # python packer-new.py --type ec2 --tag latest --region us-west-2 --public-ip True --application ops --role base --env dev --os centos --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk single --dry-run --clean
 # python packer-new.py --type ec2 --tag latest --region us-west-2 --public-ip True --application ops --role base --env dev --os centos --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk multi  --dry-run --clean
 # python packer-new.py --type ec2 --tag latest --region us-west-2 --public-ip True --application ops --role base --env dev --os amazon --vpc-id vpc-b08b6fd6 --subnet-id subnet-11b4674a --instance-type t2.micro --virt hvm --prefix packer --disk single --dry-run --clean
@@ -131,8 +132,10 @@ exclude_list = [
 # Amazon Linux ami
 amazon_owner_id='137112412989'
 amazon_owner_alias='amazon'
-amazon_hvm_minimal = 'amzn-ami-minimal-hvm*'
-amazon_pv_minimal = 'amzn-ami-minimal-pv*'
+amazon_hvm_minimal = 'amzn-ami-hvm*'
+# amazon_hvm_minimal = 'amzn-ami-minimal-hvm*'
+amazon_pv_minimal = 'amzn-ami-pv*'
+# amazon_pv_minimal = 'amzn-ami-minimal-pv*'
 amazon_user = "ec2-user"
 
 # Centos
@@ -685,9 +688,8 @@ if __name__ == "__main__":
     if args.os == "amazon":
         owner_id = amazon_owner_id
         owner_alias = amazon_owner_alias
-        default_packages.append("python27-pip")
-        default_packages.append("aws-apitools-common")
-        default_packages.append("aws-cli python-pycrypto python-pyzmq zeromq")
+        default_packages.append("python27-pip python27-setuptools python27-boto3 python27-botocore python27-pycrypto python27-pyzmq salt27-minion")
+        default_packages.append("aws-apitools-common aws-cli zeromq vim-enhanced openssh openssh-clients openssh-server")
         default_modules.append("salt")
         if args.virt != "pv":
             logging.error("Using Amazon OS %s" % (args.os))
