@@ -36,20 +36,22 @@
         }]
     }],
     "provisioners": [{
+        "type": "shell",
+        "execute_command": "sudo -S sh '{{ sudo }}'",
+        "inline_shebang": "/bin/sh -e -x",
+        "inline": [
+            {% if os == "ubuntu" or os == "debian" %}"sudo apt-get update -y "{% else %}"sudo yum clean all && sudo yum update -y "{% endif %},
+            {% for package in default_packages %}{% if loop.first %}{% if os == "ubuntu" or os == "debian" %}"sudo apt-get install -y{% else %}"sudo yum install -y {% endif %}{% endif %} {{package}}{% if loop.last %}"{% endif %}{% endfor %}
+        ]
+    },{
         "type": "file",
         "source": "{{ salt_grains_file }}",
         "destination": "/tmp/grains"
     },{
-        "type": "shell",
-        "execute_command": "sudo -S sh '{{ sudo }}'",
-        "inline": [
-            "mkdir -p /etc/salt/grains",
-            "mv /tmp/grains /etc/salt/grains"
-        ]
-    },{
         "type": "salt-masterless",
         "local_state_tree": "{{ salt_state_tree }}",
         "local_pillar_roots": "{{ salt_pillar_root }}",
+        "grains_file": "{{ salt_grains_file }}",
         "bootstrap_args": "{{ bootstrap_args }}",
         "no_exit_on_failure": false,
         "log_level": "debug"
