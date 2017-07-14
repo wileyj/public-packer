@@ -1,0 +1,64 @@
+{
+  'Images': [{
+    'ProductCodes': [{
+      'ProductCodeId': 'aw0evgkw8e5c1q413zgy5pjce',
+      'ProductCodeType': 'marketplace'
+    }],
+    'Name': 'CentOS Linux 7 x86_64 HVM EBS 1602-b7ee8a69-ee97-4a49-9e68-afaee216db2e-ami-d7e1d2bd.3',
+    'VirtualizationType': 'hvm',
+    'Hypervisor': 'xen',
+    'ImageOwnerAlias': 'aws-marketplace',
+    'ImageId': 'ami-d2c924b2',
+    'State': 'available',
+    'BlockDeviceMappings': [{
+      'DeviceName': '/dev/sda1',
+      'Ebs': {
+        'DeleteOnTermination': False,
+        'SnapshotId': 'snap-b715e22f',
+        'VolumeSize': 8,
+        'VolumeType': 'standard',
+        'Encrypted': False
+      }
+    }],
+    'Architecture': 'x86_64',
+    'ImageLocation': 'aws-marketplace/CentOS Linux 7 x86_64 HVM EBS 1602-b7ee8a69-ee97-4a49-9e68-afaee216db2e-ami-d7e1d2bd.3',
+    'RootDeviceType': 'ebs',
+    'OwnerId': '679593333241',
+    'RootDeviceName': '/dev/sda1',
+    'CreationDate': '2016-02-26T21:16:29.000Z',
+    'Public': True,
+    'ImageType': 'machine',
+    'Description': 'CentOS Linux 7 x86_64 HVM EBS 1602'
+  }, {
+    'ProductCodes': [{
+      'ProductCodeId': 'aw0evgkw8e5c1q413zgy5pjce',
+      'ProductCodeType': 'marketplace'
+    }],
+    'Name': 'CentOS Linux 7 x86_64 HVM EBS 1704_01-b7ee8a69-ee97-4a49-9e68-afaee216db2e-ami-d52f5bc3.4',
+    'VirtualizationType': 'hvm',
+    'Hypervisor': 'xen',
+    'ImageOwnerAlias': 'aws-marketplace',
+    'EnaSupport': False,
+    'ImageId': 'ami-f4533694',
+    'State': 'available',
+    'BlockDeviceMappings': [{
+      'DeviceName': '/dev/sda1',
+      'Ebs': {
+        'DeleteOnTermination': False,
+        'SnapshotId': 'snap-0d602abbc11b7c685',
+        'VolumeSize': 8,
+        'VolumeType': 'standard',
+        'Encrypted': False
+      }
+    }],
+    'Architecture': 'x86_64',
+    'ImageLocation': 'aws-marketplace/CentOS Linux 7 x86_64 HVM EBS 1704_01-b7ee8a69-ee97-4a49-9e68-afaee216db2e-ami-d52f5bc3.4',
+    'RootDeviceType': 'ebs',
+    'OwnerId': '679593333241',
+    'RootDeviceName': '/dev/sda1',
+    'CreationDate': '2017-05-10T18:54:01.000Z',
+    'Public': True,
+    'ImageType': 'machine',
+    'Description': 'CentOS Linux 7 x86_64 HVM EBS 1704_01'
+  }]
+}
