@@ -1,44 +1,24 @@
-# import boto3
-# from datetime import datetime
-# aws ec2 describe-images --filter '[{ "Name":"name", "Values":["CentOS*7*64*"]}]'
-from get_images import get_images
-import args
+from ec2 import ec2
+from aws_conn import conn
+from args import Args
+from config import Global
+import logging
+from logger import Logger
 
+args = Args().args
+print "Type: %s" % (args.type)
+print "Region: %s" % (args.region)
+print "verbose: %s" % (args.verbose)
+print Global.centos_ami
 
-# Amazon Linux ami
-amazon_owner_id = '137112412989'
-amazon_owner_alias = 'amazon'
-amazon_ami = 'amzn-ami-hvm*'
-amazon_ami_pv = 'amzn-ami-pv*'
-amazon_user = "ec2-user"
-
-# Centos
-centos_owner_id = '679593333241'
-centos_owner_alias = ''
-centos_ami = 'CentOS*7*64*'
-centos_user = "centos"
-
-# ubuntu ami
-ubuntu_owner_id = '099720109477'
-ubuntu_owner_alias = ''
-ubuntu_ami = 'ubuntu*16*amd64*server*'
-ubuntu_user = "ubuntu"
-
-# coreos ami
-coreos_owner_id = '595879546273'
-coreos_owner_alias = ''
-coreos_ami = 'CoreOS*stable*hvm'
-coreos_user = "core"
-
-# atomic ami
-atomic_owner_id = '410186602215'
-atomic_owner_alias = ''
-atomic_ami = 'CentOS*Atomic*Host*x86_64*HVM*'
-atomic_user = "centos"
-
-
-# image = get_images().find_ami(centos_ami, '679593333241', '', 'ec2')
-image = get_images().find_ami(centos_ami, centos_owner_id, '', 'ec2')
+ec2_client = conn().boto3('ec2', args.region)
+image = ec2(ec2_client).get_image(Global.centos_ami, Global.centos_owner_id, '', 'ec2')
 print "Image: %s" % (image)
-print get_images().return_ami('')
-print args.Args()
+print ec2(ec2_client).find_image('')
+
+logger = Logger()
+logging.debug('debug message')
+logging.info('info message')
+logging.warn('warn message')
+logging.error('error message')
+logging.critical('critical message')
