@@ -35,7 +35,7 @@ class Args:
         parser.add_argument(
             '-v',
             nargs='?',
-            default=3,
+            default=2,
             action=VAction,
             dest='verbose'
         )
