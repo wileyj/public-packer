@@ -1,12 +1,14 @@
 import os
+import jinja2
+from config import Global
 import logging
 from logger import Logger
 
 
-class template(object):
+class Template(object):
     logger = Logger()
 
-    def delete(filename):
+    def delete_template(self, filename):
         """ docstring """
         if os.path.isfile(filename) and os.access(filename, os.R_OK):
             logging.error("Found Existing file: %s" % (filename))
@@ -14,34 +16,18 @@ class template(object):
             os.remove(filename)
         return 0
 
-    def write_userdata_template(userdata_template_source, userdata_template_dest):
+    def write_template(self, template_values, template_source, template_dest, template_path, template_type):
         """ docstring """
-        template().delete(userdata_template_dest)
-        result = ""
-        logging.info("[ EXEC  ] - Writing UserData Template %s" % (userdata_template_dest))
-        template = env.get_template(userdata_template_source+".jinja2")
-        result = template.render()
-        os.open(userdata_template_dest, os.O_CREAT)
-        fd = os.open(userdata_template_dest, os.O_RDWR)
-        os.write(fd, result)
-        file_stat = os.stat(userdata_template_dest)
-        file_size = file_stat.st_size
-        logging.info("\tCreated userdata file %s ( %s )" % (userdata_template_dest, file_size))
-        os.close(fd)
-        return 0
-
-    def write_template(template_values, template_source, template_dest, template_path, template_type):
-        """ docstring """
-        check_and_delete_file(template_dest)
+        self.delete_template(template_dest)
         result = ""
         logging.error("[ EXEC  ] - Writing Template %s: %s:" % (template_type, template_source))
         logging.error("\tLooking for template (%s%s) to write %s" % (template_path, template_source, template_dest))
-        print "\ttemplate_values: %s" % (template_values)
-        print "\ttemplate_source: %s" % (template_source)
-        print "\ttemplate_dest: %s" % (template_dest)
-        print "\ttemplate_path: %s" % (template_path)
-        packer_env = jinja2.Environment(loader=jinja2.FileSystemLoader([template_path]))
-        template = packer_env.get_template(template_source)
+        logging.error("\ttemplate_values: %s" % (template_values))
+        logging.error("\ttemplate_source: %s" % (template_source))
+        logging.error("\ttemplate_dest: %s" % (template_dest))
+        logging.error("\ttemplate_path: %s" % (template_path))
+        jinja2_env = jinja2.Environment(loader=jinja2.FileSystemLoader([template_path]))
+        template = jinja2_env.get_template(template_source)
         result = template.render(template_values)
         os.open(template_dest, os.O_CREAT)
         fd = os.open(template_dest, os.O_RDWR)
@@ -52,21 +38,25 @@ class template(object):
         os.close(fd)
         return 0
 
-    def write_services_template(template_values, template_source, template_dest, template_path):
+    def write_services_template(self, template_values, template_source, template_dest, template_path, template_type):
         """ docstring """
-        check_and_delete_file(template_dest)
+        self.delete_template(template_dest)
         result = ""
-        print "[ EXEC  ] - Writing Services Template %s" % (template_source)
-        print "looking for %s%s to write %s" % (template_path, template_source, template_dest)
+        logging.error("[ EXEC  ] - Writing Template %s: %s:" % (template_type, template_source))
+        logging.error("\tLooking for template (%s%s) to write %s" % (template_path, template_source, template_dest))
+        logging.error("\ttemplate_values: %s" % (template_values))
+        logging.error("\ttemplate_source: %s" % (template_source))
+        logging.error("\ttemplate_dest: %s" % (template_dest))
+        logging.error("\ttemplate_path: %s" % (template_path))
         jinja2_env = jinja2.Environment(loader=jinja2.FileSystemLoader([template_path]))
         template = jinja2_env.get_template(template_source)
         result = template.render(template_values)
         with open(template_dest, 'w') as output:
             output.write(result)
-            print "\t Adding default_services to %s" % (template_dest)
-            for service in default_services:
-                filename = services_template_path+service+".service"
-                print "\t  Read filename: %s" % (filename)
+            logging.error("\t Adding default_services to %s" % (template_dest))
+            for service in Global.default_services:
+                filename = Global.services_template_path + service + ".service"
+                logging.error("\t  Read filename: %s" % (filename))
                 with open(filename, 'r') as f:
                     for line in f:
                         output.write(line)
@@ -74,6 +64,6 @@ class template(object):
         output.closed
         file_stat = os.stat(template_dest)
         file_size = file_stat.st_size
-        print "\tCreated Services Script: %s ( %s )" % (template_dest, file_size)
+        logging.error("\tCreated Services Script: %s ( %s )" % (template_dest, file_size))
         # os.close(fd)
         return 0
