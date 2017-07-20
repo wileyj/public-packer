@@ -5,7 +5,6 @@ from args import Args
 
 class Logger:
     def __init__(self):
-        print "Logger"
         args = Args().args
         if args.verbose > 3:
             log_format = '%(asctime)-4s [%(levelname)-s] %(filename)-s %(module)-s:%(funcName)-4s(%(lineno)-s) - %(message)-4s'
