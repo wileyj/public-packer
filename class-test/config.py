@@ -15,6 +15,10 @@ class Global:
     short_date = str('{:04d}'.format(today.year)) + str('{:02d}'.format(today.month)) + str('{:02d}'.format(today.day))
     short_hour = str('{:04d}'.format(today.year)) + str('{:02d}'.format(today.month)) + str('{:02d}'.format(today.day)) + "_" + str(current_time)
 
+    cwd = os.getcwd()
+    salt_state_tree = cwd + "/salt/srv/salt"
+    salt_pillar_root = cwd + "/salt/srv/pillar"
+    bootstrap_args = "-d -M -N -X -q -Z -c /tmp"
     repo_address = "yumrepo.moil.io"
     repo_dns = "yumrepo.moil.io"
 
@@ -60,7 +64,6 @@ class Global:
     etcd_cluster = "http://local.com:2380"
     log_disk = "xvdf"
     log_mount = "/srv/log"
-    inline = []
     enhanced_networking = ""
     extra_script = ""
     packer_template = "/var/tmp/packer-" + str(epoch) + ".json"

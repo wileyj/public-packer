@@ -11,8 +11,8 @@ class Template(object):
     def delete_template(self, filename):
         """ docstring """
         if os.path.isfile(filename) and os.access(filename, os.R_OK):
-            logging.error("Found Existing file: %s" % (filename))
-            logging.error("Deleting: %s" % (filename))
+            logging.critical("Found Existing file: %s" % (filename))
+            logging.critical("Deleting: %s" % (filename))
             os.remove(filename)
         return 0
 
@@ -40,6 +40,7 @@ class Template(object):
 
     def write_services_template(self, template_values, template_source, template_dest, template_path, template_type):
         """ docstring """
+        logging.critical("Deleting file: %s" % (template_dest))
         self.delete_template(template_dest)
         result = ""
         logging.error("[ EXEC  ] - Writing Template %s: %s:" % (template_type, template_source))
