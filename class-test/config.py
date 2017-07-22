@@ -16,8 +16,8 @@ class Global:
     short_hour = str('{:04d}'.format(today.year)) + str('{:02d}'.format(today.month)) + str('{:02d}'.format(today.day)) + "_" + str(current_time)
 
     cwd = os.getcwd()
-    salt_state_tree = cwd + "/salt/srv/salt"
-    salt_pillar_root = cwd + "/salt/srv/pillar"
+    salt_state_tree = cwd + "/../salt/srv/salt"
+    salt_pillar_root = cwd + "/../salt/srv/pillar"
     bootstrap_args = "-d -M -N -X -q -Z -c /tmp"
     repo_address = "yumrepo.moil.io"
     repo_dns = "yumrepo.moil.io"

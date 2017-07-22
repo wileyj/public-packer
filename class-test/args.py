@@ -228,13 +228,13 @@ class Args:
         parser.add_argument(
             '--dry-run',
             action='store_true',
-            default=False,
+            # default=False,
             help="Don't run packer at script conclusion"
         )
         parser.add_argument(
             '--push',
             action='store_true',
-            default=False,
+            # default=False,
             help="Push to dockerhub"
         )
         parser.add_argument(
