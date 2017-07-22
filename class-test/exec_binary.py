@@ -10,10 +10,11 @@ class Exec(object):
         ''' docstring '''
         logging.warning("\tLaunching: %s" % (binary))
         logging.warning("\tUsing Template: %s" % (packer_template))
-        # try:
-        #     os.system(binary + ' build ' + packer_template)
-        # except:
-        #     logging.exception("Packer exception occurred")
+        logging.critical("exec: %s build %s" % (binary, packer_template))
+        try:
+            os.system(binary + ' build ' + packer_template)
+        except:
+            logging.exception("Packer exception occurred")
         logging.error("Removing Packer template: %s" % (packer_template))
         os.remove(packer_template)
         logging.error("Removing Shell template: %s" % (shell_template))
