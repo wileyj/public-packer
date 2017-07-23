@@ -2,16 +2,16 @@ from datetime import datetime
 import logging
 from logger import Logger
 
+logger = Logger()
+
 
 class ec2(object):
-    logger = Logger()
-
     def __init__(self, client):
         self.ec2_client = client
 
     def get_image(self, ami, owner_id, owner_alias, exec_type):
         '''
-            replaces function "get_ec2_images"
+            Method to find details about an image from provided filters of name, owner and owner id
         '''
         logging.warn("filtering ami based on: ")
         logging.warn("\t ami: %s" % (ami))
@@ -57,33 +57,43 @@ class ec2(object):
 
     def find_image(self, image_name):
         '''
-            replaces function "find_image"
+            Method to retrieve the image ID from a supplied name
         '''
         try:
             images = self.ec2_client.describe_images(Filters=[{'Name': 'name', 'Values': [image_name]}])
-            return images
+            if len(images['Images']) > 0:
+                logging.error("Returning images: %s" % (images))
+                return images
+            else:
+                logging.error("No images found. Continuing")
+                return 100
         except:
             pass
 
-    def delete_image(self, images):
+    def copy_image(self, image, region):
         '''
-            delete_image
+            Method to copy created image to new region
+        '''
+        logging.critical("Copying Image (%s) to Region: %s" % (image, region))
+        return True
+
+    def delete_image(self, images, dry_run):
+        '''
+            Deletes an image from provided image id
         '''
         try:
             if len(images) > 0:
-                # logging.info("Deregistering Image %s" % (images['Images'][0]['ImageId']))
+                logging.error("Renaming Image before deregistering...")
                 logging.critical("Deregistering Image %s" % (images['Images'][0]['ImageId']))
-                # self.ec2_client.deregister_image(ImageId=images['Images'][0]['ImageId'])
+                if not dry_run:
+                    self.ec2_client.deregister_image(ImageId=images['Images'][0]['ImageId'])
+                # implement this soon
                 #
-                #  https://boto3.readthedocs.io/en/latest/reference/services/ec2.html#EC2.Waiter.ImageExists
-                #
+                # https://boto3.readthedocs.io/en/latest/reference/services/ec2.html#EC2.Waiter.ImageExists
                 # not working, to implement later
                 # waiter = client.get_waiter('image_available')
                 # waiter.wait(ImageIds=[images['Images'][0]['ImageId']])
                 # logging.info("Image %s is Deregistered " % (images['Images'][0]['ImageId']))
-                return 0
+            return 0
         except:
             return -1
-
-        # exit(0)
-        # return image_id

@@ -4,10 +4,10 @@ from config import Global
 import logging
 from logger import Logger
 
+logger = Logger()
+
 
 class Template(object):
-    logger = Logger()
-
     def delete_template(self, filename):
         """ docstring """
         if os.path.isfile(filename) and os.access(filename, os.R_OK):
