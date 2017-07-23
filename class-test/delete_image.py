@@ -1,3 +1,9 @@
+# from ec2 import ec2
+import logging
+from logger import Logger
+
+logger = Logger()
+
 
 class delete_images(object):
     def __init__(self, client):
@@ -8,20 +14,19 @@ class delete_images(object):
             replaces function "get_ec2_images"
         '''
 
-def delete_image(images):
-    """ docstring """
-    if len(images) > 0:
-        logging.info("Renaming Image before deregistering...")
-        logging.info("Deregistering Image %s" % (images['Images'][0]['ImageId']))
-        ec2_client.deregister_image(ImageId=images['Images'][0]['ImageId'])
-         #
-         #  https://boto3.readthedocs.io/en/latest/reference/services/ec2.html#EC2.Waiter.ImageExists
-         #
-    #     # not working, to implement later
-    #     # waiter = client.get_waiter('image_available')
-    #     # waiter.wait(ImageIds=[images['Images'][0]['ImageId']])
-    #     # logging.info("Image %s is Deregistered " % (images['Images'][0]['ImageId']))
-    return 0
+    def delete_image(self, images):
+        """ docstring """
+        if len(images) > 0:
+            logging.info("Renaming Image before deregistering...")
+            logging.info("Deregistering Image %s" % (images['Images'][0]['ImageId']))
+            self.ec2_client.deregister_image(ImageId=images['Images'][0]['ImageId'])
+            # https://boto3.readthedocs.io/en/latest/reference/services/ec2.html#EC2.Waiter.ImageExists
+            #
+            # not working, to implement later
+            # waiter = client.get_waiter('image_available')
+            # waiter.wait(ImageIds=[images['Images'][0]['ImageId']])
+            # logging.info("Image %s is Deregistered " % (images['Images'][0]['ImageId']))
+        return 0
 
-    # exit(0)
-    # return image_id
+        # exit(0)
+        # return image_id

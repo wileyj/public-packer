@@ -7,6 +7,8 @@ from logger import Logger
 from template import Template
 from exec_binary import Exec
 import os
+import sys
+import time
 
 if __name__ == "__main__":
     logger = Logger()
@@ -222,4 +224,20 @@ if __name__ == "__main__":
     Template().write_template(shell_values, 'shell.jinja2', Global.shell_dest, scripts_template_path, "shell")
 
     if not args.dry_run:
+        if args.type != "docker":
+            if ec2(ec2_client).find_image(args.prefix) != 100:
+                ec2(ec2_client).delete_image(ec2(ec2_client).find_image(args.prefix), args.dry_run)
+                while ec2(ec2_client).find_image(args.prefix) != 100:
+                    status = ec2(ec2_client).find_image(args.prefix)
+                    elapsed = Global.elapsed + Global.secs
+                    sys.stdout.write("Waiting for ami %s to delete ( Elapsed %s secs)" % (args.prefix, Global.elapsed))
+                    sys.stdout.flush()
+                    time.sleep(Global.secs)
+                    if Global.elapsed == Global.timeout:
+                        logging.critical("Timeout %s Reached. Exiting..." % (Global.timeout))
+                        exit(Global.timeout)
+
+    if not args.dry_run:
         Exec().Packer(Global.packer_binary, Global.packer_template, Global.shell_dest, Global.salt_grains_template, Global.userdata_dest)
+
+    exit(0)

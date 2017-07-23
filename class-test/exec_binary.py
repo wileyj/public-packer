@@ -4,7 +4,6 @@ import os
 
 
 class Exec(object):
-    logger = Logger()
 
     def Packer(self, binary, packer_template, shell_template, salt_template, userdata_template):
         ''' docstring '''
