@@ -7,7 +7,7 @@ logger = Logger()
 
 class ec2(object):
     def __init__(self, client):
-        self.ec2_client = client
+        self.client = client
 
     def get_image(self, ami, owner_id, owner_alias, exec_type):
         '''
@@ -21,7 +21,7 @@ class ec2(object):
         logging.warn("")
         if exec_type != "docker":
             if owner_alias:
-                images = self.ec2_client.describe_images(
+                images = self.client.describe_images(
                     Filters=[
                         {'Name': 'root-device-type', 'Values': ['ebs']},
                         {'Name': 'name', 'Values': [ami]},
@@ -31,7 +31,7 @@ class ec2(object):
                     ]
                 )
             else:
-                images = self.ec2_client.describe_images(
+                images = self.client.describe_images(
                     Filters=[
                         {'Name': 'root-device-type', 'Values': ['ebs']},
                         {'Name': 'name', 'Values': [ami]},
@@ -60,7 +60,7 @@ class ec2(object):
             Method to retrieve the image ID from a supplied name
         '''
         try:
-            images = self.ec2_client.describe_images(Filters=[{'Name': 'name', 'Values': [image_name]}])
+            images = self.client.describe_images(Filters=[{'Name': 'name', 'Values': [image_name]}])
             if len(images['Images']) > 0:
                 logging.error("Returning images: %s" % (images))
                 return images
@@ -86,7 +86,7 @@ class ec2(object):
                 logging.error("Renaming Image before deregistering...")
                 logging.critical("Deregistering Image %s" % (images['Images'][0]['ImageId']))
                 if not dry_run:
-                    self.ec2_client.deregister_image(ImageId=images['Images'][0]['ImageId'])
+                    self.client.deregister_image(ImageId=images['Images'][0]['ImageId'])
                 # implement this soon
                 #
                 # https://boto3.readthedocs.io/en/latest/reference/services/ec2.html#EC2.Waiter.ImageExists
