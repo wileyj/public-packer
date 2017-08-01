@@ -227,12 +227,16 @@ if __name__ == "__main__":
         if args.type != "docker":
             if ec2(ec2_client).find_image(args.prefix) != 100:
                 ec2(ec2_client).delete_image(ec2(ec2_client).find_image(args.prefix), args.dry_run)
+                elapsed = Global.elapsed
                 while ec2(ec2_client).find_image(args.prefix) != 100:
                     status = ec2(ec2_client).find_image(args.prefix)
-                    elapsed = Global.elapsed + Global.secs
-                    sys.stdout.write("Waiting for ami %s to delete ( Elapsed %s secs)" % (args.prefix, Global.elapsed))
+                    elapsed = elapsed + Global.secs
+                    sys.stdout.write("Waiting for ami %s to delete ( Elapsed %s secs)%s" % (args.prefix, elapsed, "\r"))
                     sys.stdout.flush()
                     time.sleep(Global.secs)
+                    # sys.stdout.write("Waiting for ami %s to delete ( Elapsed %s secs)" % (args.prefix, elapsed))
+                    # sys.stdout.flush()
+                    # time.sleep(Global.secs)
                     if Global.elapsed == Global.timeout:
                         logging.critical("Timeout %s Reached. Exiting..." % (Global.timeout))
                         exit(Global.timeout)
