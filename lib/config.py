@@ -1,9 +1,11 @@
 import time
 import os
 from datetime import datetime
+from args import Args
 
 
 class Global:
+    args = Args().args
     epoch = time.time()
     user = os.getlogin()
     secs = 10
@@ -16,11 +18,13 @@ class Global:
     short_hour = str('{:04d}'.format(today.year)) + str('{:02d}'.format(today.month)) + str('{:02d}'.format(today.day)) + "_" + str(current_time)
 
     cwd = os.getcwd()
-    salt_state_tree = cwd + "/../salt/srv/salt"
-    salt_pillar_root = cwd + "/../salt/srv/pillar"
+    salt_state_tree = cwd + "/salt/srv/salt"
+    salt_pillar_root = cwd + "/salt/srv/pillar"
     bootstrap_args = "-d -M -N -X -q -Z -c /tmp"
-    repo_address = "yumrepo.moil.io"
-    repo_dns = "yumrepo.moil.io"
+    repo_address = "yumrepo.site.io"
+    repo_dns = "yumrepo.site.io"
+    primary_disk_size = 50
+    secondary_disk_size = 100
 
     # Amazon Linux ami
     amazon_owner_id = '137112412989'
@@ -101,6 +105,7 @@ class Global:
     ]
 
     default_modules = [
+        "boto",
         "boto3",
         "awscli",
         "botocore",
@@ -116,3 +121,81 @@ class Global:
     exclude_list = [
         "fipscheck*"
     ]
+    shell_values = {
+        'os': args.os
+    }
+
+    services_values = {
+        'runit_services': '',
+        'services_packages': services_packages
+    }
+    userdata_values = {
+        'os': args.os,
+        'repo_address': repo_address,
+        'exclude_list': exclude_list,
+        # 'image_name': image_name,
+        # 'image_tag': image_tag
+        # 'sumo_access_id': sumo_access_id,
+        # 'sumo_access_key': sumo_access_key
+    }
+    if args.role == 'base':
+        args.cleanup = "true"
+    else:
+        args.cleanup = ""
+    salt_grains_values = {
+        'region': args.region,
+        'platform': args.platform,
+        'prefix': args.prefix,
+        'instance_profile': args.iam_profile,
+        'vpc_id': args.vpc_id,
+        'tag': args.tag,
+        'release': args.release,
+        'environment': args.env,
+        'subnet_id': args.subnet_id,
+        'cleanup': args.cleanup,
+        'application': args.application,
+        'role': args.role,
+        'type': args.type,
+        'build_type': 'Packer'
+    }
+    packer_values = {
+        'source_ami': '',
+        'instance_type': args.instance_type,
+        'instance_profile': args.iam_profile,
+        'ssh_user': args.ssh_user,
+        'vpc_id': args.vpc_id,
+        'subnet_id': args.subnet_id,
+        'region': args.region,
+        'packages': default_packages,
+        'modules': default_modules,
+        'user_data_file': userdata_dest,
+        'create_user_script': createuser_dest,
+        'platform': args.platform,
+        'prefix': args.prefix,
+        'tag': args.tag,
+        'type': args.type,
+        'release': args.release,
+        'os': args.os,
+        'application': args.application,
+        'role': args.role,
+        'environment': args.env,
+        'script': shell_dest,
+        'services_script': services_script,
+        'template': '',
+        'sudo': "{{ .Path }}",
+        'timestamp': timestamp,
+        'extra_script': args.script,
+        'extra_script_args': args.script_args,
+        'inline': inline,
+        'cwd': cwd,
+        'image': args.image,
+        'salt_grains_file': salt_grains_template,
+        'default_packages': default_packages,
+        'salt_state_tree': salt_state_tree,
+        'salt_pillar_root': salt_pillar_root,
+        'bootstrap_args': bootstrap_args,
+        'docker_push': args.push,
+        'public_ip': args.public_ip,
+        'primary_disk': primary_disk_size,
+        'secondary_disk': secondary_disk_size
+    }

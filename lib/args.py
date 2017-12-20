@@ -49,7 +49,7 @@ class Args:
             '--iam-profile',
             nargs='?',
             metavar='',
-            default="MOIL.Base",
+            default="",
             help="IAM Role"
         )
         parser.add_argument(
