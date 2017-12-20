@@ -1,0 +1,77 @@
+#
+python packer.py \
+  --os centos \
+  --iam-profile Base \
+  --vpc-id vpc-asdf1234 \
+  --subnet-id subnet-asdf1234 \
+  --instance-type t2.micro \
+  --virt hvm \
+  --prefix packer \
+  --disk single \
+  --env dev \
+  --role base \
+  --type ec2 \
+  --region us-west-2 \
+  --tag latest \
+  --public-ip True \
+  --clean \
+  --dry-run
+
+python packer.py \
+  --os centos \
+  --iam-profile Base \
+  --vpc-id vpc-asdf1234 \
+  --subnet-id subnet-asdf1234 \
+  --instance-type t2.micro \
+  --virt hvm \
+  --prefix packer \
+  --disk multi \
+  --env dev \
+  --role base \
+  --type ec2 \
+  --region us-west-2 \
+  --tag latest \
+  --public-ip True \
+  --clean \
+  --dry-run
+
+# docker
+python packer.py \
+  --os centos \
+  --image centos:7 \
+  --type docker \
+  --role base \
+  --application ops \
+  --prefix packer \
+  --disk multi \
+  --env dev \
+  --region us-west-2 \
+  --tag centos.latest \
+  --repo local/ops \
+  --clean \
+  --dry-run
+#  --push
+
+
+  # base ec2 multi disk
+  python packer.py --os centos --vpc-id vpc-asdf1234 --subnet-id subnet-asdf1234 --instance-type t2.micro --virt hvm --role base --prefix packer --disk multi --env dev --type ec2    --region us-east-1 --tag latest
+  python packer.py --os amazon --vpc-id vpc-asdf1234 --subnet-id subnet-asdf1234 --instance-type t2.micro --virt hvm --role base --prefix packer --disk multi --env dev --type ec2    --region us-east-1 --tag latest
+  python packer.py --os atomic --vpc-id vpc-asdf1234 --subnet-id subnet-asdf1234 --instance-type t2.micro --virt hvm --role base --prefix packer --disk multi --env dev --type ec2    --region us-east-1 --tag latest
+  python packer.py --os coreos --vpc-id vpc-asdf1234 --subnet-id subnet-asdf1234 --instance-type t2.micro --virt hvm --role base --prefix packer --disk multi --env dev --type ec2    --region us-east-1 --tag latest
+  python packer.py --os ubuntu --vpc-id vpc-asdf1234 --subnet-id subnet-asdf1234 --instance-type t2.micro --virt hvm --role base --prefix packer --disk multi --env dev --type ec2    --region us-east-1 --tag latest
+
+  # base ec2 single disk
+  python packer.py --os centos --vpc-id vpc-asdf1234 --subnet-id subnet-asdf1234 --instance-type t2.micro --virt hvm --role base --prefix packer --disk single --env dev --type ec2   --region us-east-1 --tag latest
+  python packer.py --os amazon --vpc-id vpc-asdf1234 --subnet-id subnet-asdf1234 --instance-type t2.micro --virt hvm --role base --prefix packer --disk single --env dev --type ec2   --region us-east-1 --tag latest
+  python packer.py --os atomic --vpc-id vpc-asdf1234 --subnet-id subnet-asdf1234 --instance-type t2.micro --virt hvm --role base --prefix packer --disk single --env dev --type ec2   --region us-east-1 --tag latest
+  python packer.py --os coreos --vpc-id vpc-asdf1234 --subnet-id subnet-asdf1234 --instance-type t2.micro --virt hvm --role base --prefix packer --disk single --env dev --type ec2   --region us-east-1 --tag latest
+  python packer.py --os ubuntu --vpc-id vpc-asdf1234 --subnet-id subnet-asdf1234 --instance-type t2.micro --virt hvm --role base --prefix packer --disk single --env dev --type ec2   --region us-east-1 --tag latest
+
+  # base docker multi disk
+  python packer.py --tag ubuntu --image ubuntu:trusty --application ops --role base --os ubuntu --repo local/base_app --template base --env dev --push
+  python packer.py --tag latest --image ubuntu:trusty --application app --role web --os ubuntu --repo local/base_app --template base --env dev --push
+  python packer.py --tag latest --image ubuntu:trusty --application app --role rabbitmq --os ubuntu --repo local/base_app --template base --env dev --push
+
+  python packer.py --tag centos --image centos:7 --application ops --role base --os centos --repo local/ops --template base --env dev --push
+  python packer.py --tag latest --image centos:7 --application ops --role base --os centos --repo local/ops --template base --env dev --push
+  python packer.py --tag latest --image centos:7 --application shared --role varnish --os centos --repo local/ops --template base --env dev --push

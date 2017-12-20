@@ -35,6 +35,7 @@
         "inline": [
             "apt-get remove -y salt* salt-common salt-master",
             "apt-get remove -y libpython3-stdlib libpython3.4-minimal libpython3.4-stdlib python-chardet python-concurrent.futures python-crypto python-dateutil python-html5lib python-html5lib-whl python-jinja2 python-mako python-markupsafe python-msgpack python-mysqldb python-pycurl python-requests python-six python-urllib3 python-yaml python-zmq",
+            "apt-get remote -y libasound2-dev* liberror-perl libx11-dev* libx11-doc libxcb-rand* libxcb-xfixes0* libxcb1-dev* linux-libc-dev openssh-client python-async python-git python-gitdb python-mysqldb python-smmap rsync x11proto-core-dev* xorg-sgml-doctools",
             "rm -rf /srv/salt /srv/pillar /srv/reactor /var/cache/salt",
             "apt-get autoremove -y"
         ]
@@ -51,6 +52,9 @@
             "type": "docker-tag",
             "repository": "{{prefix}}",
             "tag": "{{tag}}"
-        }{% if docker_push %},"docker-push" {% endif %}
+        }
+{%- if docker_push %}
+        ,"docker-push"
+{% endif -%}
     ]]
 }

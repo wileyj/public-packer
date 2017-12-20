@@ -29,7 +29,7 @@
         },
         "ami_block_device_mappings": [{
             "device_name": "/dev/xvda",
-            "volume_size": 15,
+            "volume_size": {{ primary_disk }},
             "volume_type": "gp2",
             "delete_on_termination": true,
             "encrypted": true
@@ -74,6 +74,12 @@
             "script": "{{create_user_script}}",
             "execute_command": "sudo -E python '{{sudo}}' --group ops"
 
+{% endif %}
+{% if script != "" %}
+        "type": "shell",
+        "execute_command": "sudo -S sh '{{ sudo }}'",
+        "script": "{{ script }}"
+    }, {
 {% endif %}
     },{
         "type": "shell",

@@ -9,7 +9,6 @@ instance:
     instance_profile: {{ instance_profile }}
     vpc_id: {{ vpc_id }}
     subnet_id: {{ subnet_id }}
-    cleanup: {{ cleanup }}
     build_type: {{ build_type }}
 {% if type != 'Docker' %}virtual_subtype: {{ type }}
 {% endif %}
