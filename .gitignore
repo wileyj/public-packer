@@ -1,3 +1,4 @@
 .DS_Store
 *.pyc
 create_images-private
+lib/config.py
