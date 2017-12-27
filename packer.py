@@ -24,13 +24,18 @@ if __name__ == "__main__":
     if args.type != "base" and args.type != "ec2" and args.type != "docker":
         args.type = "ec2"
     if args.type == "docker":
-        args.prefix = args.repo + args.prefix_app
         container_name = args.repo + args.prefix_platform + args.prefix_app + args.tag
+        print "container_name: %s" % (container_name)
+        image_tag = args.os + "." + args.role + "." + args.tag
+        # sys.exit(0)
         template_name = args.template
+        image_name = args.repo + args.prefix_app
+        Global.packer_values['tag'] = image_tag
     if args.type == "ec2":
         template_name = args.role + "_" + args.disk
-        args.prefix = "wileyj." + args.os + "_" + args.role + "." + args.type + "_" + args.virt + "_" + args.disk + "." + args.prefix.replace(" ", "-") + "_" + Global.short_date
-
+        image_name = "wileyj." + args.os + "_" + args.role + "." + args.type + "_" + args.virt + "_" + args.disk + "." + args.prefix.replace(" ", "-") + "_" + Global.short_date
+    Global.salt_grains_values['prefix'] = image_name
+    Global.packer_values['prefix'] = image_name
     if args.clean:
         try:
             os.system('rm /var/tmp/*[0-9]*')
@@ -146,13 +151,13 @@ if __name__ == "__main__":
 
     if not args.dry_run:
         if args.type != "docker":
-            if ec2(ec2_client).find_image(args.prefix) != 100:
-                ec2(ec2_client).delete_image(ec2(ec2_client).find_image(args.prefix), args.dry_run)
+            if ec2(ec2_client).find_image(Global.packer_values['prefix']) != 100:
+                ec2(ec2_client).delete_image(ec2(ec2_client).find_image(Global.packer_values['prefix']), args.dry_run)
                 elapsed = Global.elapsed
-                while ec2(ec2_client).find_image(args.prefix) != 100:
-                    status = ec2(ec2_client).find_image(args.prefix)
+                while ec2(ec2_client).find_image(Global.packer_values['prefix']) != 100:
+                    status = ec2(ec2_client).find_image(Global.packer_values['prefix'])
                     elapsed = elapsed + Global.secs
-                    sys.stdout.write("Waiting for ami %s to delete ( Elapsed %s secs)%s" % (args.prefix, elapsed, "\r"))
+                    sys.stdout.write("Waiting for ami %s to delete ( Elapsed %s secs)%s" % (Global.packer_values['prefix'], elapsed, "\r"))
                     sys.stdout.flush()
                     time.sleep(Global.secs)
                     if Global.elapsed == Global.timeout:

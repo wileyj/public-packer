@@ -8,7 +8,8 @@ echo > /var/log/dpkg.log
 echo > /var/log/alternatives.log
 {% else %}
 yum remove -y autoconf automake cpp* cronie-anacron dovecot ghostscript git gobject-introspection groff-base libgnome-keyring libx11-common libxkb lvm2-mlock make man-db newt poppler qt3-devel rsh rsh-server telnet-server tftp-server vsftpd xinetd ypbind ypserv yum-utils
-pip uninstall -y docutils colorama iniparse kitchen
+yum remove -y python-Babel python-boto python-GitPython python-gnupg python-passlib python-Sphinx
+pip uninstall -y docutils colorama iniparse kitchen awscli boto3 botocore
 rm -rf /var/log/fsck /root/.cache /usr/share/doc /usr/share/man /var/cache/yum /var/lib/yum
 echo > /var/log/yum.log
 {% endif %}

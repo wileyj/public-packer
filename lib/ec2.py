@@ -59,13 +59,14 @@ class ec2(object):
         '''
             Method to retrieve the image ID from a supplied name
         '''
+        logging.critical("Checking for existing image named: %s" % (image_name))
         try:
             images = self.client.describe_images(Filters=[{'Name': 'name', 'Values': [image_name]}])
             if len(images['Images']) > 0:
-                logging.error("Returning images: %s" % (images))
+                logging.critical("Found images: %s" % (images))
                 return images
             else:
-                logging.error("No images found. Continuing")
+                logging.critical("No existing images found. Continuing")
                 return 100
         except:
             pass
