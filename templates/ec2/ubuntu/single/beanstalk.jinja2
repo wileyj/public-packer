@@ -1,5 +1,5 @@
 {
-    "_comment": "Ubuntu {{source_ami}} ecs multi-disk",
+    "_comment": "Ubuntu {{source_ami}} beanstalk single-disk",
     "builders": [{
         "type": "amazon-ebs",
         "communicator": "ssh",
@@ -33,12 +33,6 @@
             "volume_type": "gp2",
             "delete_on_termination": true,
             "encrypted": true
-        },{
-            "device_name": "/dev/sdf",
-            "volume_size": {{ secondary_disk }},
-            "volume_type": "gp2",
-            "delete_on_termination": true,
-            "encrypted": true
         }]
     }],
     "provisioners": [{
@@ -50,43 +44,30 @@
             {% for package in default_packages %}{% if loop.first %}{% if os == "ubuntu" or os == "debian" %}"sudo apt-get install -y{% else %}"sudo yum install -y {% endif %}{% endif %} {{package}}{% if loop.last %}"{% endif %}{% endfor %}
         ]
     },{
-        "type": "shell",
-        "execute_command": "sudo -S sh '{{ sudo }}'",
-        "inline_shebang": "/bin/sh -e -x",
-        "inline": [
-            {% for module in modules %}"sudo pip install --upgrade  {{module}}"{% if not loop.last %},
-            {% endif %}{% endfor %}
-        ]
-    },{
         "type": "file",
         "source": "{{ salt_grains_file }}",
         "destination": "/tmp/grains"
     },{
-        "type": "shell",
-        "execute_command": "sudo -S sh '{{ sudo }}'",
-        "inline": [
-            "mv /tmp/grains /etc/salt/grains"
-        ]
-    },{
         "type": "salt-masterless",
         "local_state_tree": "{{ salt_state_tree }}",
         "local_pillar_roots": "{{ salt_pillar_root }}",
+        "grains_file": "{{ salt_grains_file }}",
         "bootstrap_args": "{{ bootstrap_args }}",
         "no_exit_on_failure": false,
         "log_level": "debug"
     },{
-    {% if create_user_script != "" %}
-            "type": "shell",
-            "script": "{{create_user_script}}",
-            "execute_command": "sudo -E python '{{sudo}}' --group ops"
-        },{
-    {% endif %}
-    {% if script != "" %}
-            "type": "shell",
-            "execute_command": "sudo -S sh '{{ sudo }}'",
-            "script": "{{ script }}"
-        }, {
-    {% endif %}
+{% if create_user_script != "" %}
+        "type": "shell",
+        "script": "{{create_user_script}}",
+        "execute_command": "sudo -E python '{{sudo}}' --group ops"
+    },{
+{% endif %}
+{% if script != "" %}
+        "type": "shell",
+        "execute_command": "sudo -S sh '{{ sudo }}'",
+        "script": "{{script}}"
+    }, {
+{% endif %}
         "type": "shell",
         "execute_command": "sudo -S sh '{{ sudo }}'",
         "inline_shebang": "/bin/sh -e -x",

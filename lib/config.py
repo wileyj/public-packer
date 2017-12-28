@@ -16,7 +16,7 @@ class Global:
     current_time = int(round(time.time()))
     short_date = str('{:04d}'.format(today.year)) + str('{:02d}'.format(today.month)) + str('{:02d}'.format(today.day))
     short_hour = str('{:04d}'.format(today.year)) + str('{:02d}'.format(today.month)) + str('{:02d}'.format(today.day)) + "_" + str(current_time)
-
+    name_prefix = "wileyj"
     cwd = os.getcwd()
     salt_state_tree = cwd + "/salt/srv/salt"
     salt_pillar_root = cwd + "/salt/srv/pillar"
@@ -26,6 +26,46 @@ class Global:
     primary_disk_size = 50
     secondary_disk_size = 100
 
+    ec2_owner = {
+        'amazon': {
+            'id': '137112412989',
+            'alias': 'amazon',
+            'hvm': 'amzn-ami-hvm*',
+            'pv': 'amzn-ami-pv*',
+            'login': 'ec2-user'
+        },
+        'centos': {
+            'id': '679593333241',
+            'alias': '',
+            'hvm': 'CentOS*7*64*',
+            'pv': '',
+            'login': 'centos'
+
+        },
+        'ubuntu': {
+            'id': '099720109477',
+            'alias': '',
+            'hvm': 'ubuntu*16*amd64*server*',
+            'pv': '',
+            'login': 'ubuntu'
+
+        },
+        'coreos': {
+            'id': '595879546273',
+            'alias': '',
+            'hvm': 'CoreOS*stable*hvm',
+            'pv': '',
+            'login': 'core'
+
+        },
+        'atomic': {
+            'id': '410186602215',
+            'alias': '',
+            'hvm': 'CentOS*Atomic*Host*x86_64*HVM*',
+            'pv': '',
+            'login': 'centos'
+        }
+    }
     # Amazon Linux ami
     amazon_owner_id = '137112412989'
     amazon_owner_alias = 'amazon'
@@ -162,7 +202,7 @@ class Global:
         'source_ami': '',
         'instance_type': args.instance_type,
         'instance_profile': args.iam_profile,
-        'ssh_user': args.ssh_user,
+        'ssh_user': ec2_owner[args.os]['login'],
         'vpc_id': args.vpc_id,
         'subnet_id': args.subnet_id,
         'region': args.region,

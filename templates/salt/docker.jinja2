@@ -1,3 +1,9 @@
+name:
+region: {{ region }}
+role: {{ role }}
+application: {{ application }}
+environment: {{ environment }}
+profile: {{ profile }}
 instance:
     application: {{ application }}
     role: {{ role }}
@@ -10,5 +16,6 @@ instance:
     vpc_id: {{ vpc_id }}
     subnet_id: {{ subnet_id }}
     build_type: {{ build_type }}
-{% if type != 'Docker' %}virtual_subtype: {{ type }}
-{% endif %}
+{%- if type != 'Docker' or type != 'docker' %}
+    virtual_subtype: {{ type }}
+{% endif -%}

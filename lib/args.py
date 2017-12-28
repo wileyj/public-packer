@@ -87,7 +87,6 @@ class Args:
             '--ssh-user',
             nargs='?',
             metavar='',
-            default="centos",
             help="EC2 SSH User ( Default: NULL )"
         )
         parser.add_argument(

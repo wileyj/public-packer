@@ -1,5 +1,5 @@
 {
-    "_comment": "Centos {{source_ami}} beanstalk single-disk",
+    "_comment": "Centos {{source_ami}} ecs single-disk",
     "builders": [{
         "type": "amazon-ebs",
         "communicator": "ssh",
@@ -8,6 +8,7 @@
         "subnet_id": "{{subnet_id}}",
         "instance_type": "{{instance_type}}",
         "ssh_username": "{{ssh_user}}",
+        "ssh_pty": true,
         "ami_name": "{{prefix}}",
         "region": "{{region}}",
         "iam_instance_profile": "{{instance_profile}}",

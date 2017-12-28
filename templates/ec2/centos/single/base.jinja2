@@ -1,5 +1,5 @@
 {
-    "_comment": "Ubuntu {{source_ami}} ecs single-disk",
+    "_comment": "Centos {{source_ami}} base single-disk",
     "builders": [{
         "type": "amazon-ebs",
         "communicator": "ssh",
@@ -65,22 +65,22 @@
         "type": "salt-masterless",
         "local_state_tree": "{{ salt_state_tree }}",
         "local_pillar_roots": "{{ salt_pillar_root }}",
-        "bootstrap_args": "{{ bootstrap_args }}",
         "no_exit_on_failure": false,
-        "log_level": "debug"
+        "log_level": "debug",
+        "skip_bootstrap": true
     },{
-    {% if create_user_script != "" %}
-            "type": "shell",
-            "script": "{{create_user_script}}",
-            "execute_command": "sudo -E python '{{sudo}}' --group ops"
-        },{
-    {% endif %}
-    {% if script != "" %}
-            "type": "shell",
-            "execute_command": "sudo -S sh '{{ sudo }}'",
-          "script": "{{ script }}"
-        }, {
-    {% endif %}
+{% if create_user_script != "" %}
+        "type": "shell",
+        "script": "{{create_user_script}}",
+        "execute_command": "sudo -E python '{{sudo}}' --group ops"
+    },{
+{% endif %}
+{% if script != "" %}
+        "type": "shell",
+        "execute_command": "sudo -S sh '{{ sudo }}'",
+        "script": "{{ script }}"
+    }, {
+{% endif %}
         "type": "shell",
         "execute_command": "sudo -S sh '{{ sudo }}'",
         "inline_shebang": "/bin/sh -e -x",

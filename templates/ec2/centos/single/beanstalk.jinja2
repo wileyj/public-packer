@@ -1,5 +1,5 @@
 {
-    "_comment": "Amazon Linux {{source_ami}} beanstalk multi-disk",
+    "_comment": "Centos {{source_ami}} beanstalk single-disk",
     "builders": [{
         "type": "amazon-ebs",
         "communicator": "ssh",
@@ -8,12 +8,13 @@
         "subnet_id": "{{subnet_id}}",
         "instance_type": "{{instance_type}}",
         "ssh_username": "{{ssh_user}}",
+        "ssh_pty": true,
         "ami_name": "{{prefix}}",
         "region": "{{region}}",
         "iam_instance_profile": "{{instance_profile}}",
         "ami_regions": ["{{region}}"],
         "associate_public_ip_address": "{{public_ip}}",
-  {{networking}}
+    {{networking}}
         "ami_description": "{{prefix}}",
         "user_data_file": "{{user_data_file}}",
         "tags": {
@@ -29,12 +30,6 @@
         "ami_block_device_mappings": [{
             "device_name": "/dev/xvda",
             "volume_size": {{ primary_disk }},
-            "volume_type": "gp2",
-            "delete_on_termination": true,
-            "encrypted": true
-        },{
-            "device_name": "/dev/sdf",
-            "volume_size": {{ secondary_disk }},
             "volume_type": "gp2",
             "delete_on_termination": true,
             "encrypted": true
@@ -70,9 +65,9 @@
         "type": "salt-masterless",
         "local_state_tree": "{{ salt_state_tree }}",
         "local_pillar_roots": "{{ salt_pillar_root }}",
-        "bootstrap_args": "{{ bootstrap_args }}",
         "no_exit_on_failure": false,
-        "log_level": "debug"
+        "log_level": "debug",
+        "skip_bootstrap": true
     },{
 {% if create_user_script != "" %}
         "type": "shell",
@@ -83,7 +78,7 @@
 {% if script != "" %}
         "type": "shell",
         "execute_command": "sudo -S sh '{{ sudo }}'",
-      "script": "{{ script }}"
+        "script": "{{ script }}"
     }, {
 {% endif %}
         "type": "shell",
