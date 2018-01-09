@@ -1,0 +1,65 @@
+{
+    "_comment": "One Docker Base container for {{image}}",
+    "builders": [{
+        "type": "docker",
+        "image": "{{image}}",
+        "commit": "true",
+        "pull": "true"
+    }],
+    "provisioners":[{
+        "type": "shell",
+        "script": "{{user_data_file}}"
+    },{
+        "type": "shell",
+        "inline": [
+            {% if os == "ubuntu" %}"apt-get update -y"{% else %}"yum update -y{{package}}"{% endif %},
+            {% for package in default_packages %}{% if loop.first %}{% if os == "ubuntu" %}"apt-get install -y{% else %}"yum install -y{% endif %}{% endif %} {{package}}{% if loop.last %}"{% endif %}{% endfor %}
+        ]
+    },{
+        "type": "file",
+        "source": "{{ salt_grains_file }}",
+        "destination": "/etc/salt/grains"
+    },{
+        "type": "salt-masterless",
+        "local_state_tree": "{{ salt_state_tree }}",
+        "local_pillar_roots": "{{ salt_pillar_root }}",
+        "no_exit_on_failure": false,
+        "log_level": "debug",
+        "skip_bootstrap": true
+{% if extra_script and extra_script != "None" %}
+    },{
+        "type": "shell",
+        "script": "{{ extra_script }}",
+        "execute_command": "sudo -E sh '{% raw %}{{ .Path }}{% endraw %}' {{ extra_script_args }}"
+{% endif %}
+{% if tagname == 'latest' or tagname == 'master' or role == 'base' %}
+    },{
+        "type": "shell",
+        "inline": [
+            "yum remove -y salt27* zeromq dmidecode python27-backports python27-backports_abc python27-backports.ssl_match_hostname python27-botocore python27-certifi python27-cffi python27-click python-cryptography python-dateutil python-docutils python-enum34 python-futures python-idna python-itsdangerous python-Jinja2 python-jmespath python-M2Crypto python-MarkupSafe python-msgpack-python python-paramiko python-pyasn1 python-pycparser python-pycrypto python-PyYAML python-pyzmq python27-requests python27-singledispatch python27-six python27-tornado python27-typing python27-vine python27-websocket-client python27-Werkzeug"
+        ]
+{% endif %}
+    },{
+        "type": "shell",
+        "inline": [
+            "rm -rf /srv/salt /srv/pillar /srv/reactor /var/cache/salt",
+            "yum remove -y dmidecode telnet vim-common tcpdump openssh-server strace e2fsprogs* wget nmap* rsync openssh-clients",
+            "yum clean all"
+        ]
+{% if sudo and sudo != "None" %}
+    },{
+        "type": "shell",
+        "script": "{{script}}"
+{% endif %}
+    }],
+    "post-processors": [[
+        {
+            "type": "docker-tag",
+            "repository": "{{prefix}}",
+            "tag": "{{tag}}"
+        }
+{%- if docker_push %}
+        ,"docker-push"
+{% endif -%}
+    ]]
+}

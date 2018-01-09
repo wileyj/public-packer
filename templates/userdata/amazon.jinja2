@@ -1,5 +1,6 @@
 #!/bin/sh
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/bin"
+yum remove -y python2-msgpack
 yum install -y sudo
 cat << EOF > /etc/yum.repos.d/moil.repo
 [moil_x86_64]
