@@ -162,7 +162,8 @@ class Global:
         "fipscheck*"
     ]
     shell_values = {
-        'os': args.os
+        'os': args.os,
+        'type': args.type
     }
 
     services_values = {

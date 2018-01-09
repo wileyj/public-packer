@@ -15,7 +15,6 @@ if __name__ == "__main__":
     args = Args().args
     ec2_client = conn().boto3('ec2', args.region)
     image = ec2(ec2_client).get_image(Global.ec2_owner[args.os][args.virt], Global.ec2_owner[args.os]['id'], Global.ec2_owner[args.os]['alias'], args.type)
-    # image = ec2(ec2_client).get_image(Global.centos_ami, Global.centos_owner_id, '', args.type)
     logging.error("Image: %s" % (image))
     args.type.lower()
     args.prefix_platform = ""
@@ -32,7 +31,6 @@ if __name__ == "__main__":
         template_name = args.role
         packer_template_path = "templates/" + args.type + "/" + args.os + "/" + args.disk + "/"
         image_name = Global.name_prefix + "." + args.os + "_" + args.role + "." + args.type + "_" + args.virt + "_" + args.disk + "." + args.prefix.replace(" ", "-") + "_" + Global.short_date
-        # image_name = "wileyj." + args.os + "_" + args.role + "." + args.type + "_" + args.virt + "_" + args.disk + "." + args.prefix.replace(" ", "-") + "_" + Global.short_date
     Global.salt_grains_values['prefix'] = image_name
     Global.packer_values['prefix'] = image_name
     if args.clean:
@@ -40,8 +38,7 @@ if __name__ == "__main__":
             os.system('rm /var/tmp/*[0-9]*')
         except OSError as e:
             logging.exception("IO Exception occurred: %s" % (e))
-    logging.critical("userdata vaulues: %s" % (Global.userdata_values))
-    # if args.type == "Docker" or args.os == "atomic" or args.os == "coreos":
+    logging.critical("userdata values: %s" % (Global.userdata_values))
     if args.os == "atomic" or args.os == "coreos":
         Global.userdata_values['quay_auth'] = Global.quay_auth
         Global.userdata_values['quay_email'] = Global.quay_email
@@ -53,7 +50,6 @@ if __name__ == "__main__":
         Global.userdata_values['log_disk'] = Global.log_disk
         Global.userdata_values['log_mount'] = Global.log_mount
 
-    # packer_template_path = "templates/" + args.type + "/" + args.os + "/" + args.disk + "/"
     salt_template_path = "templates/salt/"
     scripts_template_path = "templates/scripts/"
     os_template_path = "templates/userdata/"
@@ -63,16 +59,18 @@ if __name__ == "__main__":
     logging.error("Using ec2_owner alias: %s" % (Global.ec2_owner[args.os]['alias']))
     logging.error("Using ec2_owner virt: %s" % (Global.ec2_owner[args.os][args.virt]))
     logging.error("Using ec2_owner login: %s" % (Global.ec2_owner[args.os]['login']))
-    Global.owner_id = Global.ec2_owner[args.os]['id']
-    Global.owner_alias = Global.ec2_owner[args.os]['alias']
-    Global.ami = Global.ec2_owner[args.os][args.virt]
+    # Global.owner_id = Global.ec2_owner[args.os]['id']
+    # Global.owner_alias = Global.ec2_owner[args.os]['alias']
+    # Global.ami = Global.ec2_owner[args.os][args.virt]
+    logging.error("Using %s OS" % (args.os))
     if args.ssh_user:
         Global.packer_values['ssh_user'] = args.ssh_user
     if args.virt == "pv" and args.os != "amazon":
-        logging.error("PV not allowed for Ubuntu")
+        logging.error("Virt of PV not allowed for %s" % (args.os))
         exit(3)
     if args.os == "amazon":
-        Global.default_packages.append("python27-pip python27-setuptools python27-boto3 python27-botocore python27-pycrypto python27-pyzmq salt27-minion")
+        Global.default_packages.append("ppython27-setuptools python27-boto3 python27-botocore python27-pycrypto python27-pyzmq salt27-minion")
+        # Global.default_packages.append("python27-pip python27-setuptools python27-boto3 python27-botocore python27-pycrypto python27-pyzmq salt27-minion")
         Global.default_packages.append("aws-apitools-common aws-cli zeromq vim-enhanced openssh openssh-clients openssh-server")
         Global.default_modules.append("salt")
     elif args.os == "ubuntu" or args.os == "debian":
@@ -91,7 +89,6 @@ if __name__ == "__main__":
         Global.default_packages.append("python-pip python-setuptools python-boto3 python-botocore")
         Global.default_packages.append("salt-minion")
 
-    logging.error("Using %s OS" % (args.os))
     logging.critical("Using ssh_user: %s" % (Global.ec2_owner[args.os]['login']))
     logging.critical("Using defined value (owner_id): %s" % (Global.ec2_owner[args.os]['id']))
     logging.critical("Using defined value (owner_alias): %s" % (Global.ec2_owner[args.os]['alias']))
@@ -102,14 +99,8 @@ if __name__ == "__main__":
         Template().write_template('', "create_users.jinja2", Global.createuser_dest, Global.scripts_template_path, "create_users")
     else:
         Global.packer_values['create_user_script'] = ""
-    # if args.role == "sumologic":
-    #     Template().write_template(Global.Global.services_values, "services.jinja2", Global.services_script, services_template_path, "services")
-    # else:
-    # Template().write_template(Global.salt_grains_values, "instance_grains.jinja2", Global.salt_grains_template, salt_template_path, "salt grains")
     Template().write_template(Global.salt_grains_values, args.type + ".jinja2", Global.salt_grains_template, salt_template_path, "salt grains")
-
     Template().write_template(Global.packer_values, args.role + ".jinja2", Global.packer_template, packer_template_path, "packer")
-    # Template().write_template(Global.packer_values, template_name + ".jinja2", Global.packer_template, packer_template_path + args.os + "/", "packer")
     Template().write_template(Global.userdata_values, args.os + ".jinja2", Global.userdata_dest, os_template_path, "userdata")
     Template().write_template(Global.shell_values, 'shell.jinja2', Global.shell_dest, scripts_template_path, "shell")
 

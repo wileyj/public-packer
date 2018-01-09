@@ -24,7 +24,7 @@
         "local_state_tree": "{{ salt_state_tree }}",
         "local_pillar_roots": "{{ salt_pillar_root }}",
         "no_exit_on_failure": false,
-        "log_level": "debug",
+        "log_level": "info",
         "skip_bootstrap": true
 {% if extra_script and extra_script != "None" %}
     },{
@@ -36,7 +36,9 @@
     },{
         "type": "shell",
         "inline": [
-            "yum remove -y salt27* zeromq dmidecode python27-backports python27-backports_abc python27-backports.ssl_match_hostname python27-botocore python27-certifi python27-cffi python27-click python-cryptography python-dateutil python-docutils python-enum34 python-futures python-idna python-itsdangerous python-Jinja2 python-jmespath python-M2Crypto python-MarkupSafe python-msgpack-python python-paramiko python-pyasn1 python-pycparser python-pycrypto python-PyYAML python-pyzmq python27-requests python27-singledispatch python27-six python27-tornado python27-typing python27-vine python27-websocket-client python27-Werkzeug"
+            "pip uninstall -y docutils colorama iniparse kitchen awscli boto3 botocore",
+            "yum remove -y salt27* zeromq dmidecode python27-backports python27-backports_abc python27-backports.ssl_match_hostname python27-botocore python27-certifi python27-cffi python27-click python-cryptography python-dateutil python-docutils python-enum34 python-futures python-idna python-itsdangerous python-Jinja2 python-jmespath python-M2Crypto python-MarkupSafe python-msgpack-python python-paramiko python-pyasn1 python-pycparser python-pycrypto python-PyYAML python-pyzmq python27-requests python27-singledispatch python27-six python27-tornado python27-typing python27-vine python27-websocket-client python27-Werkzeug ruby24* ruby20-libs",
+            "yum remove -y aws-apitools-common aws-cli git nmap openssh openssh-clients openssh-server lsof python27-pycrypto traceroute alsa-lib binutils cpio dbus-libs dejavu-fonts-common dejavu-sans-fonts dejavu-serif-fonts findutils fontconfig fontpackages-filesystem freetype giflib gpm-libs iproute iptables javapackages-tools jpackage-utils kmod kmod-libs lcms2 libICE libSM libXau libXfont libfontenc libidn libnih libpnglibsslibudev libuser libutempter libuuid libxcb libxslt libyaml mailcap mingetty net-tools nmap-ncat procps psmisc python27-M2Crypto python27-MarkupSafe python27-PyNaCl python27-PySocks python27-PyYAML python27-Sphinx python27-paramiko python27-ply python27-pretend python27-pyasn1 python27-pytest python27-pytz python27-jmespath python27-paramiko python27-bcrypt python27-colorama python27-cryptography python27-flaky python27-idna python27-ipaddress python27-jmespath python27-msgpack python27-paramiko shadow-utils sysvinit tcp_wrappers-libs ttmkfdir tzdata-java vim-filesystem which xorg-x11-font-utils xorg-x11-fonts-Type1 xz"
         ]
 {% endif %}
     },{
