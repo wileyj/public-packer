@@ -9,8 +9,8 @@
     "provisioners":[{
         "type": "shell",
         "inline": [
-            {% if os == "ubuntu" %}"apt-get update -y"{% else %}"yum update -y{{package}}"{% endif %},
-            {% for package in default_packages %}{% if loop.first %}{% if os == "ubuntu" %}"apt-get install -y{% else %}"yum install -y{% endif %}{% endif %} {{package}}{% if loop.last %}"{% endif %}{% endfor %}
+            "apt-get update -y",
+            "apt-get install -y {{ default_packages }}"
         ]
     },{
         "type": "file",
@@ -28,17 +28,6 @@
         "type": "shell",
         "script": "{{ extra_script }}",
         "execute_command": "sudo -E sh '{% raw %}{{ .Path }}{% endraw %}' {{ extra_script_args }}"
-{% endif %}
-{% if tagname == 'latest' or tagname == 'master' or role == 'base' %}
-    },{
-        "type": "shell",
-        "inline": [
-            "apt-get remove -y salt* salt-common salt-master",
-            "apt-get remove -y libpython3-stdlib libpython3.4-minimal libpython3.4-stdlib python-chardet python-concurrent.futures python-crypto python-dateutil python-html5lib python-html5lib-whl python-jinja2 python-mako python-markupsafe python-msgpack python-mysqldb python-pycurl python-requests python-six python-urllib3 python-yaml python-zmq",
-            "apt-get remote -y libasound2-dev* liberror-perl libx11-dev* libx11-doc libxcb-rand* libxcb-xfixes0* libxcb1-dev* linux-libc-dev openssh-client python-async python-git python-gitdb python-mysqldb python-smmap rsync x11proto-core-dev* xorg-sgml-doctools",
-            "rm -rf /srv/salt /srv/pillar /srv/reactor /var/cache/salt",
-            "apt-get autoremove -y"
-        ]
 {% endif %}
 {% if sudo and sudo != "None" %}
     },{

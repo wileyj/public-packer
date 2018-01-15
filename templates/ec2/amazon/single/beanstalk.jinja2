@@ -40,16 +40,15 @@
         "execute_command": "sudo -S sh '{{ sudo }}'",
         "inline_shebang": "/bin/sh -e -x",
         "inline": [
-            {% if os == "ubuntu" or os == "debian" %}"sudo apt-get update -y "{% else %}"sudo yum update -y "{% endif %},
-            {% for package in default_packages %}{% if loop.first %}{% if os == "ubuntu" or os == "debian" %}"sudo apt-get install -y{% else %}"sudo yum install -y {% endif %}{% endif %} {{package}}{% if loop.last %}"{% endif %}{% endfor %}
+          "yum update -y",
+          "yum install -y {{ default_packages }}"
         ]
     },{
         "type": "shell",
         "execute_command": "sudo -S sh '{{ sudo }}'",
         "inline_shebang": "/bin/sh -e -x",
         "inline": [
-            {% for module in modules %}"sudo pip install --upgrade  {{module}}"{% if not loop.last %},
-            {% endif %}{% endfor %}
+          "sudo pip install --upgrade  {{pip_modules}}"
         ]
     },{
         "type": "file",

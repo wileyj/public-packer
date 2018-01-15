@@ -1,0 +1,392 @@
+{
+  "default": {
+    "name_prefix": "wileyj",
+    "salt_state_tree_suffix": "/salt/srv/salt",
+    "salt_pillar_root_suffix": "/salt/srv/pillar",
+    "bootstrap_args": "-d -M -N -X -q -Z -c /tmp",
+    "repo_address": "yumrepo.moil.io",
+    "repo_dns": "yumrepo.moil.io",
+    "primary_disk_size": "50",
+    "secondary_disk_size": "100",
+    "packer_binary": "~/go-workspace/bin/packer",
+    "curl_binary": "/usr/bin/curl",
+    "sumo_access_id": "<sumo_access_id>",
+    "sumo_access_key": "<sumo_access_key>",
+    "quay_auth": "<quay_auth_key>",
+    "quay_email": "<quay_email>",
+    "quay_url": "https://quay.io",
+    "docker_auth": "<docker_auth_key>",
+    "docker_email": "<docker_auth_email>",
+    "docker_url": "https://index.docker.io/v1/",
+    "etcd_cluster": "http://local.com:2380",
+    "log_disk": "xvdf",
+    "log_mount": "/srv/log",
+    "inline": [],
+    "packages": [
+      "sudo",
+      "git",
+      "curl",
+      "telnet",
+      "nmap",
+      "lsof",
+      "strace",
+      "tcpdump",
+      "traceroute",
+      "rsync"
+    ],
+    "pip_modules": [
+        "boto",
+        "boto3",
+        "awscli",
+        "botocore",
+        "python-dateutil",
+        "jmespath",
+        "pyasn1",
+        "colorama",
+        "s3transfer",
+        "request",
+        "rsa"
+    ],
+    "exclude_list": [
+      "fipscheck*"
+    ],
+    "ami": {
+      "amazon": {
+        "id": "137112412989",
+        "alias": "amazon",
+        "hvm": "amzn-ami-hvm*",
+        "pv": "amzn-ami-pv*",
+        "login": "ec2-user"
+      },
+      "centos": {
+        "id": "679593333241",
+        "alias": "",
+        "hvm": "CentOS*7*64*",
+        "pv": "",
+        "login": "centos"
+      },
+      "ubuntu": {
+        "id": "099720109477",
+        "alias": "",
+        "hvm": "ubuntu*16*amd64*server*",
+        "pv": "",
+        "login": "ubuntu"
+      },
+      "coreos": {
+        "id": "595879546273",
+        "alias": "",
+        "hvm": "CoreOS*stable*hvm",
+        "pv": "",
+        "login": "core"
+      },
+      "atomic": {
+        "id": "410186602215",
+        "alias": "",
+        "hvm": "CentOS*Atomic*Host*x86_64*HVM*",
+        "pv": "",
+        "login": "centos"
+      }
+    }
+  },
+  "cleanup": {
+    "global": {
+      "dirs": [
+        "/root/.cache",
+        "/var/log/fsck",
+        "/srv/salt",
+        "/srv/pillar",
+        "/srv/reactor",
+        "/var/cache/salt"
+      ],
+      "files": [],
+      "packages": [],
+      "modules": [{
+        "pip": []
+      }]
+    },
+    "redhat": {
+      "global":{
+        "dirs": [],
+        "files": [
+          "/var/log/yum.log"
+        ],
+        "packages": [],
+        "modules": [{
+          "pip": []
+        }]
+      },
+      "docker": {
+        "global": {
+          "dirs": [
+            "/var/cache/yum",
+            "/var/lib/yum",
+            "/usr/share/doc/*",
+            "/usr/share/man/*"
+          ],
+          "files": [],
+          "packages": [
+            "autoconf",
+            "automake",
+            "cpp*",
+            "cronie-anacron",
+            "dmidecode",
+            "dovecot",
+            "e2fsprogs*",
+            "ghostscript",
+            "nmap*",
+            "openssh-clients",
+            "openssh-server",
+            "perl-*",
+            "python*-backports_abc",
+            "python*-backports.ssl_match_hostname",
+            "python*-backports",
+            "python*-botocore",
+            "python*-certifi",
+            "python*-cffi",
+            "python*-chardet",
+            "python*-click",
+            "python*-cryptography",
+            "python*-devel",
+            "python*-idna",
+            "python*-ipaddress",
+            "python*-M2Crypto",
+            "python*-MarkupSafe",
+            "python*-pyasn1",
+            "python*-pycrypto",
+            "python*-PyYAML",
+            "python*-pyzmq",
+            "python*-requests",
+            "python*-singledispatch",
+            "python*-six",
+            "python*-Sphinx",
+            "python*-tornado",
+            "python*-typing",
+            "python*-vine",
+            "python*-websocket-client",
+            "python*-Werkzeug",
+            "rsh-server",
+            "rsh",
+            "rsync",
+            "strace",
+            "tcpdump",
+            "telnet-server",
+            "telnet",
+            "vim-common",
+            "wget"
+          ],
+          "modules": [{
+            "pip": [
+              "docutils",
+              "colorama",
+              "iniparse",
+              "kitchen",
+              "awscli",
+              "boto3",
+              "botocore"
+            ]
+          }]
+        },
+        "amazon": {
+          "dirs": [],
+          "files": [],
+          "packages": [
+            "binutils",
+            "cpio",
+            "dbus-libs",
+            "findutils",
+            "kmod-libs",
+            "kmod",
+            "libblkid",
+            "libidn",
+            "libuser",
+            "libutempter",
+            "libutempter",
+            "libuuid",
+            "libxslt",
+            "procps",
+            "psmisc",
+            "python26",
+            "python27-Babel",
+            "python27-bcrypt",
+            "python27-colorama",
+            "python27-docutils",
+            "python27-flaky",
+            "python27-futures",
+            "python27-imaging",
+            "python27-jmespath",
+            "python27-kitchen",
+            "python27-msgpack",
+            "python27-paramiko",
+            "python27-ply",
+            "python27-pretend",
+            "python27-PyNaCl",
+            "python27-PySocks",
+            "python27-pytest",
+            "python27-pytz",
+            "python27-tools",
+            "ruby20-libs",
+            "ruby24*",
+            "salt27*",
+            "shadow-utils",
+            "upstart",
+            "xz"
+          ],
+          "modules": [{
+            "pip": []
+          }]
+        },
+        "centos": {
+          "dirs": [],
+          "files": [],
+          "packages": [
+            "python-bcrypt",
+            "python-boto",
+            "python-flaky",
+            "python-futures",
+            "python-gitdb2",
+            "python-gnupg",
+            "python-gobject-base",
+            "python-kitchen",
+            "python-libnacl",
+            "python-mock",
+            "python-msgpack-pure",
+            "python-msgpack-python",
+            "python-passlib",
+            "python-pretend",
+            "python-PyNaCl",
+            "python-PySocks",
+            "python-pytest",
+            "python-pytz",
+            "python-scripttest",
+            "python-smmap2",
+            "python2-jmespath",
+            "ruby-irb",
+            "ruby-libs",
+            "ruby",
+            "salt-minion",
+            "salt",
+            "tcl"
+          ],
+          "modules": [{
+            "pip": []
+          }]
+        }
+      },
+      "ec2": {
+        "global": {
+          "dirs": [],
+          "files": [],
+          "packages": [],
+          "modules": [{
+            "pip": []
+          }]
+        },
+        "amazon": {
+          "dirs": [],
+          "files": [],
+          "packages": [],
+          "modules": [{
+            "pip": []
+          }]
+        },
+        "centos": {
+          "dirs": [],
+          "files": [],
+          "packages": [],
+          "modules": [{
+            "pip": []
+          }]
+        }
+      }
+    },
+    "debian": {
+      "global": {
+        "dirs": [],
+        "files": [
+          "/var/log/dpkg.log",
+          "/var/log/alternatives.log",
+          "/usr/share/doc/*",
+          "/usr/share/man/*"
+        ],
+        "packages": [],
+        "modules": [{
+          "pip": []
+        }]
+      },
+      "docker": {
+        "global": {
+          "dirs": [],
+          "files": [],
+          "packages": [],
+          "modules": [{
+            "pip": []
+          }]
+        },
+        "debian": {
+          "dirs": [],
+          "files": [],
+          "packages": [],
+          "modules": [{
+            "pip": []
+          }]
+        },
+        "ubuntu": {
+          "dirs": [],
+          "files": [],
+          "packages": [],
+          "modules": [{
+            "pip": []
+          }]
+        }
+      },
+      "ec2": {
+        "global": {
+          "dirs": [],
+          "files": [],
+          "packages": [],
+          "modules": [{
+            "pip": []
+          }]
+        },
+        "debian": {
+          "dirs": [],
+          "files": [],
+          "packages": [],
+          "modules": [{
+            "pip": []
+          }]
+        },
+        "ubuntu": {
+          "dirs": [],
+          "files": [],
+          "packages": [],
+          "modules": {
+            "pip": []
+          }
+        }
+      }
+    },
+    "generic": {
+      "docker": {
+        "global":{
+          "dirs": [],
+          "files": [],
+          "packages": [],
+          "modules": [{
+            "pip": []
+          }]
+        }
+      },
+      "ec2":{
+        "global": {
+          "dirs": [],
+          "files": [],
+          "packages": [],
+          "modules": [{
+            "pip": []
+          }]
+        }
+      }
+    }
+  }
+}

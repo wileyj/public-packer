@@ -1,41 +1,40 @@
 #!/bin/sh -x
+# cleanup script
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/bin"
-{%- if os == "ubuntu" or os == "debian" %}
-apt remove -y autoconf automake autotools-dev cpp-* cronie-anacron dictionaries-common dpkg-dev \
-geomview ghostscript git  git-man gsfonts gsfonts-x11 libexpat1-dev libssl-dev libxml2-dev make \
-manpages manpages-dev mlock postfix qt3-dev-tools rsh rsh-server telnet-server tftp-server \
-ubuntu-minimal vsftpd whiptail x11proto xfonts* xinetd xkb-data xpdf ypbind ypserv
-pip uninstall -y docutils Mako wsgiref
-rm -rf /var/log/fsck /root/.cache /usr/share/doc /usr/share/man /var/lib/apt/lists /var/log/apt /var/cache/apt
-echo > /var/log/dpkg.log
-echo > /var/log/alternatives.log
-{% endif -%}
+{% if tagname == 'latest' or tagname == 'master' %}
+  {% if packages != "" %}
+    # package removal
+    {%- if os == "centos" or os == "amazon" %}
+      yum remove -y {{ packages }}
+    {%- else %}
+      apt-get remove -y {{ packages }}
+    {% endif -%}
+  {% endif %}
+  {%- if pip_modules != "" %}
+    # module removal ...
+    pip uninstall -y {{ pip_modules }}
+  {%- endif %}
+{%- endif %}
+
+
 {%- if os == "centos" or os == "amazon" %}
-yum remove -y autoconf automake cpp* cronie-anacron dovecot ghostscript rsh rsh-server telnet-server
-{%- if type == "docker" %}
-\
-git gobject-introspection groff-base libgnome-keyring lib*11-common libxkb \
-lvm2-mlock man-db newt poppler qt3-devel tftp-server vsftpd xinetd ypbind ypserv yum-utils \
-python*-Babel  python*-boto python*-GitPython python*-gnupg python*-passlib python*-Sphinx \
-openssh* libjpeg* ethtool fipscheck giflib hwdata libXrender libedit libjpeg* libpcap  perl-* mailcap midgetty libpng aws-apitools-common
-{%- if os == "amazon" -%}
- \
-python26 upstart libutempter libblkid python27-chardet python27-devel python27-futures python27-kitchen python27-tools
-{% endif -%}
-{%- if os == "centos" -%}
- \
-python-PyNaCl python-PySocks python-bcrypt python-chardet python-devel python-flaky python-gitdb2 python-kitchen \
-python-libnacl python-mock python-msgpack-pure python-pretend python-pytest python-pytz python-scripttest \
-python-smmap2 ruby ruby-irb ruby-libs tcl
-{% endif -%}
-{% endif %}
-yum clean all
-rm -rf /var/log/fsck /root/.cache /usr/share/doc /usr/share/man /var/cache/yum /var/lib/yum
-echo > /var/log/yum.log
+  {% if type == 'docker' %}
+    yum remove -y dmidecode telnet vim-common tcpdump openssh-server strace e2fsprogs* wget nmap* rsync openssh-clients
+  {% endif %}
+  # clean yum db
+  yum clean all
 {% endif %}
 
-rm -rf /usr/share/doc/*
-rm -rf /usr/share/man/*
+{%- if files != "" %}
+  # empty files
+  {%- for file in files %}
+    echo > {{ file }}
+  {% endfor %}
+{%- endif %}
+{%- if dirs != "" %}
+  # dir cleanup
+  rm -rf {{ dirs }}
+{%- endif %}
 for i in `ls /var/log`; do
     if [ -f "/var/log/$i" ]; then
         echo > /var/log/$i

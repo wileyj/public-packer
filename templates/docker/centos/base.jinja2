@@ -12,8 +12,8 @@
     },{
         "type": "shell",
         "inline": [
-            {% if os == "ubuntu" %}"apt-get update -y"{% else %}"yum update -y{{package}}"{% endif %},
-            {% for package in default_packages %}{% if loop.first %}{% if os == "ubuntu" %}"apt-get install -y{% else %}"yum install -y{% endif %}{% endif %} {{package}}{% if loop.last %}"{% endif %}{% endfor %}
+            "yum update -y",
+            "yum install -y {{ default_packages }}"
         ]
     },{
         "type": "file",
@@ -32,20 +32,10 @@
         "script": "{{ extra_script }}",
         "execute_command": "sudo -E sh '{% raw %}{{ .Path }}{% endraw %}' {{ extra_script_args }}"
 {% endif %}
-{% if tagname == 'latest' or tagname == 'master' or role == 'base' %}
     },{
         "type": "shell",
         "inline": [
-            "pip uninstall -y docutils colorama iniparse kitchen awscli boto3 botocore",
-            "yum remove -y aws-apitools-common aws-cli git  nmap openssh openssh-clients openssh-server lsof python27-pycrypto traceroute alsa-lib dejavu-fonts-common dejavu-sans-fonts dejavu-serif-fonts fontconfig fontpackages-filesystem freetype giflib gpm-libs iproute iptables javapackages-tools jpackage-utils lcms2 libICE libSM libXau libXfont libfontenc libnih libpnglibsslibudev libxcb libyaml mailcap mingetty net-tools nmap-ncat psmisc python27-M2Crypto python27-MarkupSafe python27-PyNaCl python27-PySocks python27-PyYAML python27-Sphinx python27-paramiko python27-ply python27-pretend python27-pyasn1 python27-pytest python27-pytz python27-jmespath python27-paramiko python27-bcrypt python27-colorama python27-cryptography python27-flaky python27-idna python27-ipaddress python27-jmespath python27-msgpack python27-paramiko sysvinit tcp_wrappers-libs ttmkfdir tzdata-java vim-filesystem which xorg-x11-font-utils xorg-x11-fonts-Type1 salt salt-minion zeromq dmidecode python-backports python-backports_abc python-backports.ssl_match_hostname python-botocore python-certifi python-cffi python-click python-cryptography python-dateutil python-docutils python-enum34 python-futures python-idna python-itsdangerous python-Jinja2 python-jmespath python-M2Crypto python-MarkupSafe python-msgpack-python python-paramiko python-pyasn1 python-pycparser python-pycrypto python-PyYAML python-pyzmq python-requests python-singledispatch python-six python-tornado python-typing python-vine python-websocket-client python-Werkzeug"
-        ]
-{% endif %}
-    },{
-        "type": "shell",
-        "inline": [
-            "rm -rf /srv/salt /srv/pillar /srv/reactor /var/cache/salt",
-            "yum remove -y dmidecode telnet vim-common tcpdump openssh-server strace e2fsprogs* wget nmap* rsync openssh-clients",
-            "yum clean all"
+            "yum remove -y dmidecode telnet vim-common tcpdump openssh-server strace e2fsprogs* wget nmap* rsync openssh-clients"
         ]
 {% if sudo and sudo != "None" %}
     },{

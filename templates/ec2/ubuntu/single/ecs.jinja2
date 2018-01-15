@@ -40,8 +40,8 @@
         "execute_command": "sudo -S sh '{{ sudo }}'",
         "inline_shebang": "/bin/sh -e -x",
         "inline": [
-            {% if os == "ubuntu" or os == "debian" %}"sudo apt-get update -y "{% else %}"sudo yum clean all && sudo yum update -y "{% endif %},
-            {% for package in default_packages %}{% if loop.first %}{% if os == "ubuntu" or os == "debian" %}"sudo apt-get install -y{% else %}"sudo yum install -y {% endif %}{% endif %} {{package}}{% if loop.last %}"{% endif %}{% endfor %}
+            "apt-get update -y",
+            "apt-get install -y {{ default_packages }}"
         ]
     },{
         "type": "file",

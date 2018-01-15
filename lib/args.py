@@ -1,4 +1,5 @@
 import argparse
+import os
 
 
 class VAction(argparse.Action):
@@ -16,6 +17,7 @@ class VAction(argparse.Action):
 class Args:
     def __init__(self):
         parser = argparse.ArgumentParser()
+        cwd = os.getcwd()
         parser.add_argument(
             '--type',
             # default="",
@@ -37,6 +39,13 @@ class Args:
             ],
             default="us-west-2",
             help="AWS Region ( Default: us-west-2 )"
+        )
+        parser.add_argument(
+            '--config',
+            # required=True,
+            # default=os.path.abspath(os.path.join(cwd, os.pardir)) + "/config.json",
+            default=cwd + "/config.json",
+            help="config file"
         )
         parser.add_argument(
             '-v',
